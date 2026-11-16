@@ -2,6 +2,11 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.4.1 — 2026-11-17 — Results only after searching
+
+- The home page opens with just the search form. The driver count and list appear only after pressing "Find drivers"; choosing a location no longer searches on its own.
+- The form still remembers the last location and time across reloads. Coming back from a driver's page during the same visit shows the search already run.
+
 ## 0.4.0 — 2026-11-17 — Simpler, calmer interface
 
 Owner's feedback: too many small grey descriptions made the screens feel congested.

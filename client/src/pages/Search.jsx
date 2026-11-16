@@ -4,7 +4,8 @@ import { api, defaultStart, fmtDateTime, inr, plural, PLAN_UNIT } from '../api.j
 import { useAuth } from '../auth.jsx';
 import { AdSlot, Avatar, DurationField, ErrorBox, LocationPicker, MapView, Rating, Verified } from '../components.jsx';
 
-const SAVED = 'doc_search';
+const SAVED = 'doc_search'; // remembers the form fields across reloads (not the results)
+let lastSearch = null; // the search run during this visit; cleared by a page reload
 const loadSaved = () => {
   try {
     const s = JSON.parse(sessionStorage.getItem(SAVED));
@@ -41,6 +42,7 @@ export default function Search() {
       });
       setResult(await api(`/drivers/search?${params}`));
       setSearched(f);
+      lastSearch = f;
       sessionStorage.setItem(SAVED, JSON.stringify(f));
     } catch (e) {
       setError(e.message);
@@ -48,8 +50,12 @@ export default function Search() {
     setBusy(false);
   }, []);
 
-  // Re-run the last search when coming back to this page.
-  useEffect(() => { if (form.location) run(form); /* eslint-disable-next-line */ }, []);
+  // Results appear only after the person presses "Find drivers". The one exception is coming
+  // back from a driver's page in the same visit: then the search they already ran is shown again.
+  useEffect(() => {
+    if (lastSearch) { setForm(lastSearch); run(lastSearch); }
+    /* eslint-disable-next-line */
+  }, []);
 
   const openDriver = useCallback((d) => navigate(`/drivers/${d.id}?${searchQuery(searched)}`), [navigate, searched]);
   // Radius and sort live with the results: changing one re-runs the same search.
@@ -78,7 +84,7 @@ export default function Search() {
         <p>Hire a verified driver by the hour, day or week.</p>
         <form className="search card" onSubmit={(e) => { e.preventDefault(); run(form); }}>
           <div className="field">Pickup location
-            <LocationPicker value={form.location} onChange={(location) => { set({ location }); run({ ...form, location }); }} />
+            <LocationPicker value={form.location} onChange={(location) => set({ location })} />
           </div>
           <div className="search-row">
             <label className="field">When
