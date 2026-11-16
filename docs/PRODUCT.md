@@ -37,6 +37,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | "Mark as paid" | Only the driver can mark a booking paid | The driver is the one who receives the money |
 | Completing a job | Driver can mark an accepted job completed at any time | Lets the flow be demonstrated without waiting for the real date. Tighten before launch |
 | Notifications | In-app bell plus optional browser desktop alerts, polled every 10 seconds; chat messages collapse to one line per booking | Works with no third-party account. SMS / WhatsApp / email left as one hook because they need a paid provider |
+| Phone UI | One responsive web app with a phone layout and home-screen install (PWA), not a separate native app | One codebase serves web and phone now. A native Android / iOS app (or wrapping this one for the app stores) is a later step if store presence or push notifications are needed |
 | Demo data | 8 approved drivers near MG Road Bengaluru, 2 customers, 1 admin, 1 pending application | Enough to exercise every screen |
 
 ## Where we deliberately do not copy BlaBlaCar

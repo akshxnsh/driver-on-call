@@ -20,6 +20,8 @@ server/
     seed.js             first-run setup: creates .env and demo data
 client/
   vite.config.js        dev server on 5173, proxies /api to 4000
+  public/               web app manifest and home-screen icons
+  scripts/make-icons.mjs  regenerates the icons (no dependencies)
   src/
     main.jsx, App.jsx   entry, top bar, routes, sign-in guard
     auth.jsx            auth context (current user, server config)
@@ -36,6 +38,10 @@ client/
       Admin.jsx         verification queue and stats
 docs/                   this folder
 ```
+
+## Screen sizes
+
+All layout is in `styles.css`. Above 860 px: two-column pages and the menu in the top bar. Below 860 px: single column. Below 720 px (phones): the top menu is replaced by the bottom tab bar (`.tabbar` in `App.jsx`), search shows list or map (`.view-switch` in `Search.jsx`), and the driver page shows a sticky request bar (`.book-cta` in `DriverPage.jsx`). These three elements exist in the page at every size and are hidden by CSS on wider screens.
 
 ## How a request flows
 

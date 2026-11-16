@@ -28,8 +28,21 @@ Then open http://localhost:5173. The API runs on port 4000 and the web app proxi
 | --- | --- |
 | `npm run setup` | Installs everything, creates `server/.env`, seeds demo data |
 | `npm run dev` | Starts API and web app with live reload |
+| `npm run dev:phone` | Same, and also reachable from phones on the same Wi-Fi |
 | `npm run reset` | Deletes the database and uploads, then seeds fresh demo data (stop `dev` first) |
 | `npm run build` then `npm start` | Production mode: Express serves the built web app on one port |
+
+## Use it on a phone
+
+The same web app has a phone layout (bottom tab bar, list/map switch) for screens narrower than 720 px, and can be added to the home screen.
+
+To open it on a real phone during development, put the phone on the same Wi-Fi as this computer and run:
+
+```bash
+npm run dev:phone
+```
+
+The terminal prints a "Network" address such as `http://192.168.1.20:5173`; open that on the phone. Windows may ask to allow Node through the firewall the first time. Over a plain `http://` network address, three things do not work, because browsers and Google require HTTPS or `localhost` for them: "Use my location", Google sign-in, and installing to the home screen. Place search and the demo login work, so the full flow can still be tried. All three work once the app is deployed on an `https://` address.
 
 ## Try the full flow
 
