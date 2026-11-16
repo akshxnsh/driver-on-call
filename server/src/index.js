@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { OAuth2Client } from 'google-auth-library';
 import { q, setAvailability, UPLOAD_DIR } from './db.js';
 import {
-  HttpError, fail, PLANS, distanceKm, availabilityIssue, listedDrivers, driverRow,
+  HttpError, fail, MAX_SPAN, quote, durationLabel, distanceKm, availabilityIssue, listedDrivers, driverRow,
   driverPublic, photoOf, parseSlots, parseListing,
 } from './lib.js';
 import { addDemoDrivers } from './demo.js';
@@ -231,29 +231,31 @@ app.put('/api/driver/me', auth, (req, res) => {
 });
 
 // ---------- search and public driver profile ----------
-function parseWhen(query) {
-  const plan = PLANS[query.plan] ? query.plan : 'hourly';
-  const units = Math.min(Math.max(Number.parseInt(query.units, 10) || 1, 1), PLANS[plan].max);
-  const start = Number.isFinite(Date.parse(query.start)) ? Date.parse(query.start) : Date.now() + 3600e3;
-  return { plan, units, start, end: start + units * PLANS[plan].ms };
+/** Reads start and end (ISO date-times) from a query or body and checks the span is sensible. */
+function parseSpan(input) {
+  const start = Date.parse(input.start), end = Date.parse(input.end);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) fail(400, 'Choose a From and a To date and time');
+  if (end <= start) fail(400, 'The To time must be after the From time');
+  if (end - start > MAX_SPAN) fail(400, 'A booking can be at most 12 weeks long');
+  return { start, end };
 }
 
 app.get('/api/drivers/search', (req, res) => {
   const lat = Number(req.query.lat), lng = Number(req.query.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) fail(400, 'Set a location first');
   const radius = Math.min(Math.max(Number(req.query.radius) || 10, 1), 100);
-  const { plan, units, start, end } = parseWhen(req.query);
+  const { start, end } = parseSpan(req.query);
   const drivers = listedDrivers()
     .map((row) => ({ row, km: distanceKm(lat, lng, row.lat, row.lng) }))
     .filter((x) => x.km <= radius)
     .map(({ row, km }) => {
-      const issue = availabilityIssue(row.user_id, start, end, plan);
+      const issue = availabilityIssue(row.user_id, start, end);
       return {
         ...driverPublic(row),
         distance_km: Math.round(km * 10) / 10,
         available: !issue,
         unavailable_reason: issue,
-        est_total: row[PLANS[plan].rate] * units,
+        est_total: quote(row, start, end).total,
       };
     });
   const sort = req.query.sort;
@@ -262,7 +264,7 @@ app.get('/api/drivers/search', (req, res) => {
     (sort === 'price' ? a.est_total - b.est_total
       : sort === 'rating' ? (b.rating_avg || 0) - (a.rating_avg || 0)
       : a.distance_km - b.distance_km));
-  res.json({ drivers, available_count: drivers.filter((d) => d.available).length, plan, units, start, end });
+  res.json({ drivers, available_count: drivers.filter((d) => d.available).length, start, end });
 });
 
 app.get('/api/drivers/:id', (req, res) => {
@@ -317,25 +319,25 @@ app.post('/api/bookings', auth, (req, res) => {
   const driver = q.get('SELECT * FROM driver_profiles WHERE user_id = ?', Number(req.body.driver_id));
   if (!driver || driver.status !== 'approved' || driver.paused) fail(404, 'This driver is not taking bookings');
   if (driver.user_id === req.user.id) fail(400, 'You cannot book yourself');
-  if (!PLANS[req.body.plan]) fail(400, 'Choose hourly, daily or weekly');
-  const { plan, units, start, end } = parseWhen(req.body);
-  if (start < Date.now()) fail(400, 'Choose a start time in the future');
+  const { start, end } = parseSpan(req.body);
+  if (start < Date.now()) fail(400, 'Choose a From time in the future');
+  const price = quote(driver, start, end);
   const lat = Number(req.body.lat), lng = Number(req.body.lng);
   const pickup = String(req.body.pickup_label || '').trim().slice(0, 200);
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || !pickup) fail(400, 'Set the pickup location');
-  const issue = availabilityIssue(driver.user_id, start, end, plan);
+  const issue = availabilityIssue(driver.user_id, start, end);
   if (issue) fail(409, `Driver is not available: ${issue.toLowerCase()}`);
   const r = q.run(
     `INSERT INTO bookings (customer_id, driver_id, plan, units, start_at, end_at, pickup_label, lat, lng,
        vehicle_desc, notes, est_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    req.user.id, driver.user_id, plan, units, start, end, pickup, lat, lng,
+    req.user.id, driver.user_id, price.plan, price.units, start, end, pickup, lat, lng,
     String(req.body.vehicle_desc || '').trim().slice(0, 120),
     String(req.body.notes || '').trim().slice(0, 500),
-    driver[PLANS[plan].rate] * units, Date.now()
+    price.total, Date.now()
   );
   const bookingId = Number(r.lastInsertRowid);
   notify(driver.user_id, 'booking', `${req.user.name} wants to hire you`,
-    `${when(start)} · ${units} ${plan === 'hourly' ? 'hour' : plan === 'daily' ? 'day' : 'week'}${units === 1 ? '' : 's'} · ${pickup}`,
+    `${when(start)} · ${durationLabel(start, end)} · ${pickup}`,
     `/bookings/${bookingId}`);
   res.status(201).json(bookingView(q.get('SELECT * FROM bookings WHERE id = ?', bookingId), req.user.id));
 });
@@ -355,7 +357,7 @@ app.post('/api/bookings/:id/action', auth, (req, res) => {
   switch (req.body.action) {
     case 'accept': {
       if (!isDriver || b.status !== 'requested') fail(400, 'This request can no longer be accepted');
-      const issue = availabilityIssue(b.driver_id, b.start_at, b.end_at, b.plan, b.id);
+      const issue = availabilityIssue(b.driver_id, b.start_at, b.end_at, b.id);
       if (issue === 'Already booked at that time') fail(409, 'You already accepted another booking at that time');
       set("status = 'accepted'");
       break;
