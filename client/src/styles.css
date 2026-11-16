@@ -125,7 +125,7 @@ legend { font-weight: 800; font-size: 1.02rem; padding: 0 10px 0 0; }
 .search .alert { margin: 12px 0 0; }
 .loc-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
 .loc-row input { margin: 0; flex: 1 1 240px; min-width: 0; }
-.loc-row .btn { flex: 1 0 auto; }
+.loc-row .btn { flex: 0 0 auto; }
 .loc-results { list-style: none; margin: 6px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .loc-results button { all: unset; display: block; width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-weight: 500; }
 .loc-results button:hover, .loc-results button:focus-visible { background: var(--brand-soft); }
@@ -241,6 +241,10 @@ legend { font-weight: 800; font-size: 1.02rem; padding: 0 10px 0 0; }
 .footer { border-top: 1px solid var(--line); background: var(--card); padding: 22px 0; font-size: 0.88rem; }
 .footer p { margin: 0 0 4px; }
 
+/* phone-only pieces: hidden on wider screens */
+.tabbar, .view-switch, .book-cta { display: none; }
+.account-links .btn { margin-top: 4px; }
+
 @media (max-width: 860px) {
   .results-grid, .two-col, .how { grid-template-columns: 1fr; }
   .results-side, .two-col aside { position: static; }
@@ -264,4 +268,57 @@ legend { font-weight: 800; font-size: 1.02rem; padding: 0 10px 0 0; }
   .week-row { flex-wrap: wrap; }
   .week-times input { width: 110px; }
   .me span:last-child { display: none; }
+}
+
+/* ---------- phones ---------- */
+@media (max-width: 720px) {
+  body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+  .wrap { padding: 0 14px; }
+  main.wrap { padding-top: 16px; padding-bottom: 24px; }
+  h1 { font-size: 1.4rem; }
+  .card { padding: 16px; }
+  /* 16px stops iOS zooming the page when a field is focused */
+  input, select, textarea { font-size: 16px; }
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 36px; }
+  .hide-phone { display: none; }
+  .loc-row .btn { flex: 1 0 auto; }
+
+  /* top bar: brand, bell and avatar only; navigation moves to the tab bar */
+  .topbar nav { display: none; }
+  .topbar-in { min-height: 54px; padding-top: 0; flex-wrap: nowrap; }
+  .topbar-user { margin-left: auto; }
+  .bell-panel { position: fixed; left: 8px; right: 8px; top: 58px; width: auto; }
+  .bell-panel ul { max-height: 55vh; }
+
+  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  .tabbar a { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 8px 2px 6px; min-height: 56px; color: var(--muted); text-decoration: none; font-size: 0.7rem; font-weight: 700; }
+  .tabbar a.active { color: var(--brand); }
+  .tabbar a.active svg { stroke-width: 2.4; }
+
+  /* search */
+  .hero { padding-top: 4px; }
+  .hero > p { font-size: 0.98rem; margin-bottom: 14px; }
+  .results-head h2 { font-size: 1.2rem; }
+  .view-switch { display: flex; order: -2; background: #e9eeeb; border-radius: 999px; padding: 4px; }
+  .view-switch button { flex: 1; font: inherit; font-weight: 700; border: 0; border-radius: 999px; padding: 9px; background: transparent; color: var(--muted); cursor: pointer; }
+  .view-switch button[aria-selected='true'] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(20, 33, 29, 0.15); }
+  .results-grid { gap: 12px; }
+  .results-grid.show-list .results-side, .results-grid.show-map .driver-list { display: none; }
+  .results-grid.show-map .map { height: 58vh !important; }
+  .driver-card { gap: 12px; }
+  .how { margin: 16px 0; }
+
+  /* driver profile and booking */
+  .profile-head { gap: 14px; align-items: flex-start; }
+  .profile-head .avatar { width: 68px !important; height: 68px !important; font-size: 1.5rem !important; }
+  .book-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: fixed; left: 0; right: 0; bottom: calc(56px + env(safe-area-inset-bottom)); z-index: 999; padding: 10px 14px; background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -6px 18px rgba(20, 33, 29, 0.08); }
+  .book-cta strong { font-size: 1.15rem; }
+  .booking-head h1 { font-size: 1.25rem; }
+  .actions .btn { flex: 1 1 auto; }
+  .chat-box { height: 46vh; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .tabs { overflow-x: auto; flex-wrap: nowrap; }
+  .tabs button { white-space: nowrap; }
+  .footer { font-size: 0.8rem; padding: 16px 0; }
 }

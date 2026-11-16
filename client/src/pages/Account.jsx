@@ -114,7 +114,7 @@ export function Login() {
 }
 
 export function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const from = useLocation().state?.from;
   const [form, setForm] = useState({ name: user.name || '', phone: (user.phone || '').replace('+91', ''), city: user.city || '' });
@@ -151,6 +151,13 @@ export function Profile() {
         {saved && <p className="alert alert-ok">Profile saved.</p>}
         <button className="btn btn-primary">Save</button>
       </form>
+      {!firstTime && (
+        <section className="card account-links">
+          <h2>Account</h2>
+          <p className="muted">Signed in as {user.email}</p>
+          <button className="btn btn-ghost" onClick={logout}>Sign out</button>
+        </section>
+      )}
     </div>
   );
 }
