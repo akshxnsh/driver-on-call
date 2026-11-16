@@ -1,23 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, defaultStart, fmtDateTime, inr, plural, PLAN_UNIT } from '../api.js';
+import { api, defaultEnd, defaultStart, durationLabel, fmtRange, inr, plural } from '../api.js';
 import { useAuth } from '../auth.jsx';
-import { AdSlot, Avatar, DurationField, ErrorBox, LocationPicker, MapView, Rating, Verified } from '../components.jsx';
+import { AdSlot, Avatar, ErrorBox, LocationPicker, MapView, Rating, SpanFields, Verified } from '../components.jsx';
 
 const SAVED = 'doc_search'; // remembers the form fields across reloads (not the results)
 let lastSearch = null; // the search run during this visit; cleared by a page reload
 const loadSaved = () => {
+  const start = defaultStart();
+  const fresh = { location: null, start, end: defaultEnd(start), radius: 10, sort: 'distance' };
   try {
     const s = JSON.parse(sessionStorage.getItem(SAVED));
-    if (s && new Date(s.start) > new Date()) return s;
-    if (s) return { ...s, start: defaultStart() };
-  } catch { /* ignore */ }
-  return { location: null, start: defaultStart(), plan: 'hourly', units: 4, radius: 10, sort: 'distance' };
+    if (!s) return fresh;
+    const stillAhead = s.end && new Date(s.start) > new Date() && new Date(s.end) > new Date(s.start);
+    return { ...fresh, location: s.location, radius: s.radius || 10, sort: s.sort || 'distance', ...(stillAhead ? { start: s.start, end: s.end } : {}) };
+  } catch {
+    return fresh;
+  }
 };
 
 /** Query string that carries the search to the driver page, so the booking form is pre-filled. */
 export const searchQuery = (f) => new URLSearchParams({
-  start: f.start, plan: f.plan, units: f.units,
+  start: f.start, end: f.end,
   ...(f.location ? { lat: f.location.lat, lng: f.location.lng, label: f.location.label } : {}),
 }).toString();
 
@@ -34,11 +38,12 @@ export default function Search() {
 
   const run = useCallback(async (f) => {
     if (!f.location) return setError('Choose a pickup location first.');
+    if (!(new Date(f.end) > new Date(f.start))) return setError('The To time must be after the From time.');
     setBusy(true); setError('');
     try {
       const params = new URLSearchParams({
-        lat: f.location.lat, lng: f.location.lng, radius: f.radius, plan: f.plan, units: f.units,
-        start: new Date(f.start).toISOString(), sort: f.sort,
+        lat: f.location.lat, lng: f.location.lng, radius: f.radius, sort: f.sort,
+        start: new Date(f.start).toISOString(), end: new Date(f.end).toISOString(),
       });
       setResult(await api(`/drivers/search?${params}`));
       setSearched(f);
@@ -87,10 +92,7 @@ export default function Search() {
             <LocationPicker value={form.location} onChange={(location) => set({ location })} />
           </div>
           <div className="search-row">
-            <label className="field">When
-              <input type="datetime-local" value={form.start} onChange={(e) => set({ start: e.target.value })} required />
-            </label>
-            <DurationField plan={form.plan} units={form.units} onChange={set} />
+            <SpanFields start={form.start} end={form.end} onChange={set} />
             <button className="btn btn-primary" disabled={busy}>{busy ? 'Searching…' : 'Find drivers'}</button>
           </div>
           <ErrorBox>{error}</ErrorBox>
@@ -102,7 +104,7 @@ export default function Search() {
           <div className="results-head">
             <div>
               <h2>{heading}</h2>
-              <p className="muted">{fmtDateTime(result.start)} · price for {plural(result.units, PLAN_UNIT[result.plan])}</p>
+              <p className="muted">{fmtRange(result.start, result.end)} · price for {durationLabel(result.start, result.end)}</p>
             </div>
             <div className="results-tools">
               <select value={form.radius} aria-label="Search distance" onChange={(e) => refine({ radius: Number(e.target.value) })}>
