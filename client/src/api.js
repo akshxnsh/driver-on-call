@@ -23,13 +23,35 @@ export async function api(path, { method = 'GET', body, form, blob } = {}) {
 
 // ---------- formatting helpers ----------
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-export const PLAN_UNIT = { hourly: 'hour', daily: 'day', weekly: 'week' };
-export const PLAN_MAX = { hourly: 16, daily: 30, weekly: 12 };
 
 export const inr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
 export const plural = (n, word) => `${n} ${word}${Number(n) === 1 ? '' : 's'}`;
 export const fmtDateTime = (ms) =>
   new Date(ms).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+/** "Wed 18 Nov, 10:00 am to 2:00 pm", or both dates when the span crosses midnight. */
+export const fmtRange = (start, end) => {
+  const s = new Date(start), e = new Date(end);
+  const time = (d) => d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+  return s.toDateString() === e.toDateString() ? `${fmtDateTime(start)} to ${time(e)}` : `${fmtDateTime(start)} to ${fmtDateTime(end)}`;
+};
+const HOUR = 3600e3;
+/** "4 hours", "3 days", "2 weeks". Same wording as the server. */
+export const durationLabel = (start, end) => {
+  const hours = Math.max(1, Math.ceil((new Date(end) - new Date(start)) / HOUR));
+  if (hours < 24) return plural(hours, 'hour');
+  const days = Math.ceil(hours / 24);
+  return days % 7 === 0 ? plural(days / 7, 'week') : plural(days, 'day');
+};
+/** Live price for a span. Mirrors quote() in server/src/lib.js, which decides the real total. */
+export const quoteTotal = (rates, start, end) => {
+  const span = new Date(end) - new Date(start);
+  if (!(span > 0)) return null;
+  const hours = Math.max(1, Math.ceil(span / HOUR));
+  if (hours <= 24) return Math.min(hours * rates.rate_hour, rates.rate_day);
+  const days = Math.ceil(hours / 24), weeks = Math.floor(days / 7), rest = days % 7;
+  const byWeek = weeks * rates.rate_week + Math.min(rest * rates.rate_day, rates.rate_week);
+  return weeks > 0 ? Math.min(byWeek, days * rates.rate_day) : days * rates.rate_day;
+};
 export const fmtDate = (ms) => new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 export const fmtMin = (m) => {
   const h = Math.floor(m / 60), mm = m % 60;
@@ -62,4 +84,6 @@ export const defaultStart = () => {
   d.setMinutes(d.getMinutes() < 30 ? 30 : 60, 0, 0);
   return toLocalInput(d);
 };
+/** Default "To": four hours after the given "From". */
+export const defaultEnd = (start) => toLocalInput(new Date(new Date(start).getTime() + 4 * HOUR));
 export const TRANSMISSION = { manual: 'Manual', automatic: 'Automatic', both: 'Manual and automatic' };

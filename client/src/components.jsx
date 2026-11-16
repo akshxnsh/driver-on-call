@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { PLAN_MAX, WEEKDAYS, inr } from './api.js';
+import { WEEKDAYS, defaultEnd, inr, toLocalInput } from './api.js';
 
 export function Avatar({ name, photo, size = 56 }) {
   const initials = (name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -26,20 +26,22 @@ export const Verified = ({ compact }) => (
   </span>
 );
 
-/** "For [4] [hours]": how long the driver is hired for. */
-export function DurationField({ plan, units, onChange }) {
+/** "From" and "To" date-time inputs. Moving From keeps the same length of booking. */
+export function SpanFields({ start, end, onChange }) {
+  function moveStart(next) {
+    if (!next) return onChange({ start: next });
+    const length = new Date(end) - new Date(start);
+    onChange({ start: next, end: length > 0 ? toLocalInput(new Date(new Date(next).getTime() + length)) : defaultEnd(next) });
+  }
   return (
-    <div className="field">For
-      <div className="duration">
-        <input type="number" min="1" max={PLAN_MAX[plan]} value={units} aria-label="How many" required
-          onChange={(e) => onChange({ units: e.target.value })} />
-        <select value={plan} aria-label="Hours, days or weeks" onChange={(e) => onChange({ plan: e.target.value, units: 1 })}>
-          <option value="hourly">hours</option>
-          <option value="daily">days</option>
-          <option value="weekly">weeks</option>
-        </select>
-      </div>
-    </div>
+    <>
+      <label className="field">From
+        <input type="datetime-local" value={start} onChange={(e) => moveStart(e.target.value)} required />
+      </label>
+      <label className="field">To
+        <input type="datetime-local" value={end} min={start} onChange={(e) => onChange({ end: e.target.value })} required />
+      </label>
+    </>
   );
 }
 
