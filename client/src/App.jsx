@@ -1,6 +1,7 @@
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth.jsx';
 import { Avatar } from './components.jsx';
+import NotificationBell from './Notifications.jsx';
 import Search from './pages/Search.jsx';
 import DriverPage from './pages/DriverPage.jsx';
 import { BookingList, BookingDetail } from './pages/Bookings.jsx';
@@ -37,6 +38,7 @@ export default function App() {
           <div className="topbar-user">
             {user ? (
               <>
+                <NotificationBell />
                 <Link to="/profile" className="me"><Avatar name={user.name} photo={user.photo_url} size={32} /> <span>{user.name.split(' ')[0]}</span></Link>
                 <button className="btn btn-ghost btn-sm" onClick={logout}>Sign out</button>
               </>

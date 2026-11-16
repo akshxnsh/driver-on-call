@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, fmtDateTime, inr, plural, PLAN_UNIT } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { AdSlot, Avatar, ErrorBox, Rating, StatusChip } from '../components.jsx';
+import { refreshNotifications } from '../Notifications.jsx';
 
 export function BookingList() {
   const { user } = useAuth();
@@ -60,7 +61,14 @@ export function BookingDetail() {
 
   useEffect(() => {
     let live = true;
-    const load = () => api(`/bookings/${id}`).then((x) => live && setB(x)).catch((e) => live && setError(e.message));
+    const load = () => api(`/bookings/${id}`).then((x) => {
+      if (!live) return;
+      setB(x);
+      // The person is looking at this booking, so its notifications count as read.
+      if (!document.hidden) {
+        api('/notifications/read', { method: 'POST', body: { link: `/bookings/${id}` } }).then(refreshNotifications).catch(() => {});
+      }
+    }).catch((e) => live && setError(e.message));
     load();
     const t = setInterval(load, 8000); // pick up accept / decline from the other side
     return () => { live = false; clearInterval(t); };
