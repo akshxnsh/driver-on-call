@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { WEEKDAYS, inr } from './api.js';
+import { PLAN_MAX, WEEKDAYS, inr } from './api.js';
 
 export function Avatar({ name, photo, size = 56 }) {
   const initials = (name || '?').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
@@ -11,16 +11,37 @@ export function Avatar({ name, photo, size = 56 }) {
 }
 
 export function Rating({ avg, count }) {
-  if (!count) return <span className="rating rating-new">New, no reviews yet</span>;
+  if (!count) return <span className="rating">New</span>;
   return (
-    <span className="rating">
-      <span className="star" aria-hidden="true">★</span> {avg.toFixed(1)}
-      <span className="muted"> ({count} review{count === 1 ? '' : 's'})</span>
+    <span className="rating" aria-label={`Rated ${avg.toFixed(1)} out of 5 from ${count} review${count === 1 ? '' : 's'}`}>
+      <span className="star" aria-hidden="true">★</span> {avg.toFixed(1)} <span className="rating-count">({count})</span>
     </span>
   );
 }
 
-export const Verified = () => <span className="badge badge-verified">✓ Verified</span>;
+/** compact: on phones show only the tick, to keep list rows on one line. */
+export const Verified = ({ compact }) => (
+  <span className="badge badge-verified" title="Driving licence and identity checked by DOC" aria-label="Verified">
+    ✓<span className={compact ? 'hide-phone' : ''}> Verified</span>
+  </span>
+);
+
+/** "For [4] [hours]": how long the driver is hired for. */
+export function DurationField({ plan, units, onChange }) {
+  return (
+    <div className="field">For
+      <div className="duration">
+        <input type="number" min="1" max={PLAN_MAX[plan]} value={units} aria-label="How many" required
+          onChange={(e) => onChange({ units: e.target.value })} />
+        <select value={plan} aria-label="Hours, days or weeks" onChange={(e) => onChange({ plan: e.target.value, units: 1 })}>
+          <option value="hourly">hours</option>
+          <option value="daily">days</option>
+          <option value="weekly">weeks</option>
+        </select>
+      </div>
+    </div>
+  );
+}
 
 const STATUS_LABEL = {
   requested: 'Waiting for driver', accepted: 'Confirmed', declined: 'Declined',
@@ -35,8 +56,7 @@ export const ErrorBox = ({ children }) => (children ? <p className="alert alert-
 export function AdSlot({ size = 'leaderboard' }) {
   return (
     <aside className={`ad-slot ad-${size}`} aria-label="Advertisement">
-      <span className="ad-tag">Advertisement</span>
-      <span className="ad-copy">Your ad here · {size} slot</span>
+      <span className="ad-tag">Ad</span>
     </aside>
   );
 }
@@ -50,13 +70,21 @@ export function LocationPicker({ value, onChange, placeholder = 'Area, landmark 
   const [results, setResults] = useState([]);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
 
   useEffect(() => setText(value?.label || ''), [value?.label]);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e) => { if (!box.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
 
   async function search(e) {
     e?.preventDefault();
     if (text.trim().length < 3) return setError('Type at least 3 letters');
-    setBusy('search'); setError(''); setResults([]);
+    setBusy('search'); setError(''); setResults([]); setOpen(true);
     try {
       const res = await fetch(`${NOMINATIM}/search?format=jsonv2&limit=5&countrycodes=in&q=${encodeURIComponent(text.trim())}`);
       const rows = await res.json();
@@ -70,7 +98,7 @@ export function LocationPicker({ value, onChange, placeholder = 'Area, landmark 
 
   function useCurrent() {
     if (!navigator.geolocation) return setError('This browser cannot share location');
-    setBusy('gps'); setError(''); setResults([]);
+    setBusy('gps'); setError(''); setResults([]); setOpen(false);
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         const loc = { lat: coords.latitude, lng: coords.longitude, label: 'Current location' };
@@ -88,30 +116,28 @@ export function LocationPicker({ value, onChange, placeholder = 'Area, landmark 
   }
 
   return (
-    <div className="loc">
+    <div className="loc" ref={box}>
       <div className="loc-row">
         <input
-          value={text} placeholder={placeholder} aria-label="Location"
+          value={text} placeholder={busy === 'gps' ? 'Finding your location…' : placeholder} aria-label="Location"
           onChange={(e) => setText(e.target.value)}
+          onFocus={() => setOpen(true)}
           onKeyDown={(e) => e.key === 'Enter' && search(e)}
         />
         <button type="button" className="btn btn-ghost" onClick={search} disabled={!!busy}>
-          {busy === 'search' ? 'Searching…' : 'Find'}
-        </button>
-        <button type="button" className="btn btn-ghost" onClick={useCurrent} disabled={!!busy}>
-          {busy === 'gps' ? 'Locating…' : '◎ Use my location'}
+          {busy === 'search' ? 'Searching…' : 'Search'}
         </button>
       </div>
-      {results.length > 0 && (
+      {open && (
         <ul className="loc-results">
+          <li><button type="button" className="loc-current" onClick={useCurrent}>◎ Use my current location</button></li>
           {results.map((r, i) => (
             <li key={i}>
-              <button type="button" onClick={() => { onChange(r); setResults([]); }}>{r.label}</button>
+              <button type="button" onClick={() => { onChange(r); setResults([]); setOpen(false); }}>{r.label}</button>
             </li>
           ))}
         </ul>
       )}
-      {value && !results.length && text === value.label && <p className="loc-set">📍 Location set</p>}
       {error && <p className="field-error">{error}</p>}
     </div>
   );
@@ -226,15 +252,14 @@ export function ListingFields({ value, onChange }) {
         <label className="field">Languages you speak
           <input value={value.languages} onChange={(e) => set({ languages: e.target.value })} placeholder="Hindi, English, Kannada" />
         </label>
-        <label className="field">About you <span className="muted">(shown on your public profile)</span>
+        <label className="field">About you
           <textarea rows={3} maxLength={600} value={value.bio} onChange={(e) => set({ bio: e.target.value })}
-            placeholder="Your experience, the kind of trips you prefer, anything customers should know." />
+            placeholder="Shown on your public profile" />
         </label>
       </fieldset>
 
       <fieldset>
         <legend>Your rates (₹)</legend>
-        <p className="hint">You set your own price. Customers pay you directly, in cash or UPI.</p>
         <div className="grid-3">
           {[['rate_hour', 'Per hour'], ['rate_day', 'Per day'], ['rate_week', 'Per week']].map(([k, label]) => (
             <label key={k} className="field">{label}
@@ -246,7 +271,6 @@ export function ListingFields({ value, onChange }) {
 
       <fieldset>
         <legend>Base location</legend>
-        <p className="hint">Customers near this point will find you. Only the area name is shown publicly.</p>
         <LocationPicker value={value.location} onChange={(location) => set({ location })} />
       </fieldset>
 

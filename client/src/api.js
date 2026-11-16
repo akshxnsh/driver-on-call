@@ -32,8 +32,25 @@ export const fmtDateTime = (ms) =>
   new Date(ms).toLocaleString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 export const fmtDate = (ms) => new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 export const fmtMin = (m) => {
-  const h = Math.floor(m / 60), mm = String(m % 60).padStart(2, '0');
-  return `${h % 12 || 12}:${mm} ${h < 12 || h === 24 ? 'am' : 'pm'}`;
+  const h = Math.floor(m / 60), mm = m % 60;
+  return `${h % 12 || 12}${mm ? ':' + String(mm).padStart(2, '0') : ''} ${h < 12 || h === 24 ? 'am' : 'pm'}`;
+};
+/** [{weekday, start_min, end_min}] -> ["Every day, 6 am to 11 pm"] or ["Mon to Sat, 8 am to 8 pm"]. */
+export const hoursSummary = (slots) => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const byDay = [1, 2, 3, 4, 5, 6, 0].map((d) => slots.find((s) => s.weekday === d) || null); // Monday first
+  const groups = [];
+  byDay.forEach((s, i) => {
+    if (!s) return;
+    const last = groups[groups.length - 1];
+    if (last && last.to === i - 1 && last.s.start_min === s.start_min && last.s.end_min === s.end_min) last.to = i;
+    else groups.push({ from: i, to: i, s });
+  });
+  const name = (i) => days[(i + 1) % 7];
+  return groups.map((g) => {
+    const span = g.from === 0 && g.to === 6 ? 'Every day' : g.from === g.to ? name(g.from) : `${name(g.from)} to ${name(g.to)}`;
+    return `${span}, ${fmtMin(g.s.start_min)} to ${fmtMin(g.s.end_min)}`;
+  });
 };
 /** Date -> value for <input type="datetime-local"> in local time. */
 export const toLocalInput = (d) => {
