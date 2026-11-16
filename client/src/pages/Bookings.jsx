@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api, fmtDateTime, inr, plural, PLAN_UNIT } from '../api.js';
+import { api, durationLabel, fmtRange, inr } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import { AdSlot, Avatar, ErrorBox, Rating, StatusChip } from '../components.jsx';
 import { refreshNotifications } from '../Notifications.jsx';
@@ -40,7 +40,7 @@ export function BookingList() {
                 <Avatar name={b.other.name} photo={b.other.photo} size={48} />
                 <div className="booking-row-main">
                   <b>{b.other.name}</b>
-                  <p>{fmtDateTime(b.start_at)} · {plural(b.units, PLAN_UNIT[b.plan])}</p>
+                  <p>{fmtRange(b.start_at, b.end_at)}</p>
                 </div>
                 <div className="booking-row-side"><StatusChip status={b.status} /><strong>{inr(b.est_total)}</strong></div>
               </Link>
@@ -101,7 +101,7 @@ export function BookingDetail() {
             <StatusChip status={b.status} />
           </div>
           <dl className="facts">
-            <div><dt>When</dt><dd>{fmtDateTime(b.start_at)} · {plural(b.units, PLAN_UNIT[b.plan])}</dd></div>
+            <div><dt>From</dt><dd>{fmtRange(b.start_at, b.end_at)} · {durationLabel(b.start_at, b.end_at)}</dd></div>
             <div><dt>Pickup</dt><dd>{b.pickup_label} <a href={`https://www.openstreetmap.org/?mlat=${b.lat}&mlon=${b.lng}#map=16/${b.lat}/${b.lng}`} target="_blank" rel="noreferrer">map</a></dd></div>
             {b.vehicle_desc && <div><dt>Car</dt><dd>{b.vehicle_desc}</dd></div>}
             {b.notes && <div><dt>Note</dt><dd>{b.notes}</dd></div>}
