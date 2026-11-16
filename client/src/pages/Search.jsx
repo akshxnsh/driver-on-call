@@ -28,6 +28,7 @@ export default function Search() {
   const [searched, setSearched] = useState(null); // the form values the current results belong to
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [view, setView] = useState('list');
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
   const run = useCallback(async (f) => {
@@ -125,7 +126,12 @@ export default function Search() {
               )}
             </div>
           ) : (
-            <div className="results-grid">
+            <div className={`results-grid show-${view}`}>
+              {/* Phones show the list or the map, one at a time. Wider screens show both. */}
+              <div className="view-switch" role="tablist" aria-label="Results view">
+                <button role="tab" aria-selected={view === 'list'} onClick={() => setView('list')}>List</button>
+                <button role="tab" aria-selected={view === 'map'} onClick={() => setView('map')}>Map</button>
+              </div>
               <ul className="driver-list">
                 {result.drivers.map((d, i) => (
                   <li key={d.id}>
