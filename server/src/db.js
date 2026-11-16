@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   customer_id INTEGER NOT NULL REFERENCES users(id),
   driver_id INTEGER NOT NULL REFERENCES users(id),
-  plan TEXT NOT NULL,                         -- rate used for the price: hourly | daily | weekly
-  units INTEGER NOT NULL,                     -- hours when hourly, otherwise days
+  plan TEXT NOT NULL,                         -- largest unit in the booking: hourly | daily | weekly
+  units INTEGER NOT NULL,                     -- length in hours, rounded
   start_at INTEGER NOT NULL,
   end_at INTEGER NOT NULL,
   pickup_label TEXT NOT NULL,

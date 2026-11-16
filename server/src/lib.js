@@ -14,36 +14,41 @@ const HOUR = 3600e3;
 export const MAX_SPAN = 84 * 24 * HOUR; // 12 weeks
 
 /**
- * Price for hiring a driver from start to end, using the cheapest of the driver's own rates.
- * - Part-hours round up. A job of up to 24 hours costs hours x hourly rate, capped at the day rate.
- * - Longer jobs are counted in days (each started 24 hours is a day): full weeks at the weekly
- *   rate, leftover days at the day rate (capped at one more week), never more than days x day rate.
+ * Splits a span into whole weeks, whole days and the hours left over (to the minute).
+ */
+const spanParts = (start, end) => {
+  const minutes = Math.max(0, Math.round((new Date(end) - new Date(start)) / 60000));
+  const weeks = Math.floor(minutes / 10080);
+  const days = Math.floor((minutes % 10080) / 1440);
+  const restMinutes = minutes % 1440;
+  return { minutes, weeks, days, restMinutes };
+};
+const priceOf = (rates, p) => {
+  // Leftover hours at the hourly rate (never more than one day), days at the day rate
+  // (days + hours never more than one week), weeks at the weekly rate.
+  const hourPart = Math.min((p.restMinutes / 60) * rates.rate_hour, rates.rate_day);
+  const dayPart = Math.min(p.days * rates.rate_day + hourPart, rates.rate_week);
+  return Math.round(p.weeks * rates.rate_week + dayPart);
+};
+/** "4 hours 30 minutes", "2 days 9 hours", "1 week 2 days": the exact difference. */
+export const durationLabel = (start, end) => {
+  const p = spanParts(start, end);
+  const say = (n, word) => (n ? `${n} ${word}${n === 1 ? '' : 's'}` : '');
+  return [say(p.weeks, 'week'), say(p.days, 'day'), say(Math.floor(p.restMinutes / 60), 'hour'), say(p.restMinutes % 60, 'minute')]
+    .filter(Boolean).join(' ') || '0 minutes';
+};
+
+/**
+ * Price for hiring a driver from start to end, for exactly the time between them.
  * The same rule is repeated in client/src/api.js for the live total; keep the two in step.
  */
 export function quote(rates, start, end) {
-  const hours = Math.max(1, Math.ceil((end - start) / HOUR));
-  if (hours <= 24) {
-    const byHour = hours * rates.rate_hour;
-    return byHour <= rates.rate_day
-      ? { total: byHour, plan: 'hourly', units: hours }
-      : { total: rates.rate_day, plan: 'daily', units: 1 };
-  }
-  const days = Math.ceil(hours / 24);
-  const weeks = Math.floor(days / 7), rest = days % 7;
-  const byWeek = weeks * rates.rate_week + Math.min(rest * rates.rate_day, rates.rate_week);
-  const byDay = days * rates.rate_day;
-  return weeks > 0 && byWeek < byDay
-    ? { total: byWeek, plan: 'weekly', units: days }
-    : { total: byDay, plan: 'daily', units: days };
-}
-
-/** "4 hours", "3 days", "2 weeks": how long a span is, in the unit people would say. */
-export function durationLabel(start, end) {
-  const hours = Math.max(1, Math.ceil((end - start) / HOUR));
-  const say = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  if (hours < 24) return say(hours, 'hour');
-  const days = Math.ceil(hours / 24);
-  return days % 7 === 0 ? say(days / 7, 'week') : say(days, 'day');
+  const p = spanParts(start, end);
+  return {
+    total: priceOf(rates, p),
+    plan: p.weeks ? 'weekly' : p.days ? 'daily' : 'hourly', // the largest unit involved
+    units: Math.max(1, Math.round(p.minutes / 60)),         // length in hours, rounded, for the record
+  };
 }
 
 export function distanceKm(lat1, lng1, lat2, lng2) {

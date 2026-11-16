@@ -35,22 +35,35 @@ export const fmtRange = (start, end) => {
   return s.toDateString() === e.toDateString() ? `${fmtDateTime(start)} to ${time(e)}` : `${fmtDateTime(start)} to ${fmtDateTime(end)}`;
 };
 const HOUR = 3600e3;
-/** "4 hours", "3 days", "2 weeks". Same wording as the server. */
-export const durationLabel = (start, end) => {
-  const hours = Math.max(1, Math.ceil((new Date(end) - new Date(start)) / HOUR));
-  if (hours < 24) return plural(hours, 'hour');
-  const days = Math.ceil(hours / 24);
-  return days % 7 === 0 ? plural(days / 7, 'week') : plural(days, 'day');
+// Same rule as server/src/lib.js, which decides the real total. Change both together.
+/**
+ * Splits a span into whole weeks, whole days and the hours left over (to the minute).
+ */
+const spanParts = (start, end) => {
+  const minutes = Math.max(0, Math.round((new Date(end) - new Date(start)) / 60000));
+  const weeks = Math.floor(minutes / 10080);
+  const days = Math.floor((minutes % 10080) / 1440);
+  const restMinutes = minutes % 1440;
+  return { minutes, weeks, days, restMinutes };
 };
-/** Live price for a span. Mirrors quote() in server/src/lib.js, which decides the real total. */
+const priceOf = (rates, p) => {
+  // Leftover hours at the hourly rate (never more than one day), days at the day rate
+  // (days + hours never more than one week), weeks at the weekly rate.
+  const hourPart = Math.min((p.restMinutes / 60) * rates.rate_hour, rates.rate_day);
+  const dayPart = Math.min(p.days * rates.rate_day + hourPart, rates.rate_week);
+  return Math.round(p.weeks * rates.rate_week + dayPart);
+};
+/** "4 hours 30 minutes", "2 days 9 hours", "1 week 2 days": the exact difference. */
+export const durationLabel = (start, end) => {
+  const p = spanParts(start, end);
+  const say = (n, word) => (n ? `${n} ${word}${n === 1 ? '' : 's'}` : '');
+  return [say(p.weeks, 'week'), say(p.days, 'day'), say(Math.floor(p.restMinutes / 60), 'hour'), say(p.restMinutes % 60, 'minute')]
+    .filter(Boolean).join(' ') || '0 minutes';
+};
+/** Live price for a span, or null when To is not after From. */
 export const quoteTotal = (rates, start, end) => {
-  const span = new Date(end) - new Date(start);
-  if (!(span > 0)) return null;
-  const hours = Math.max(1, Math.ceil(span / HOUR));
-  if (hours <= 24) return Math.min(hours * rates.rate_hour, rates.rate_day);
-  const days = Math.ceil(hours / 24), weeks = Math.floor(days / 7), rest = days % 7;
-  const byWeek = weeks * rates.rate_week + Math.min(rest * rates.rate_day, rates.rate_week);
-  return weeks > 0 ? Math.min(byWeek, days * rates.rate_day) : days * rates.rate_day;
+  const p = spanParts(start, end);
+  return p.minutes > 0 ? priceOf(rates, p) : null;
 };
 export const fmtDate = (ms) => new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 export const fmtMin = (m) => {

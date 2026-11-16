@@ -2,6 +2,16 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.5.1 — 2026-11-17 — Exact duration
+
+Owner's decision: the time between From and To is counted exactly, with no rounding up.
+
+- Duration is shown to the minute ("4 hours 30 minutes", "2 days 9 hours").
+- Price: leftover hours at the hourly rate pro rata (never more than one day rate), whole days at the day rate (days plus hours never more than one week rate), whole weeks at the weekly rate. At ₹180 / ₹1,200 / ₹7,000: 4 h 30 min is ₹810, 1 day 1 hour is ₹1,380, 2 days 9 hours is ₹3,600. This replaces the rounding rule described under 0.5.0.
+- The units column now stores the length in hours, rounded.
+
+Checked: server and client give the same totals for sample spans; a live search returned exact prices. Not re-checked in the request form UI. PRODUCT.md and ARCHITECTURE.md still describe the 0.5.0 rounding rule and need updating.
+
 ## 0.5.0 — 2026-11-17 — Bookings by From and To
 
 Owner's decision: do not ask "when" and "how many hours"; ask for a From and a To date and time.
