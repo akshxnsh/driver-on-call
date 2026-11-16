@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, defaultStart, fmtDate, fmtMin, inr, plural, PLAN_MAX, PLAN_UNIT, TRANSMISSION, WEEKDAYS } from '../api.js';
 import { useAuth } from '../auth.jsx';
@@ -27,6 +27,16 @@ export default function DriverPage() {
   useEffect(() => {
     api(`/drivers/${id}`).then(setDriver).catch((e) => setError(e.message));
   }, [id]);
+
+  // Track whether the booking form is on screen, to show or hide the phone shortcut bar.
+  const formRef = useRef(null);
+  const [formVisible, setFormVisible] = useState(true);
+  useEffect(() => {
+    if (!formRef.current) return;
+    const io = new IntersectionObserver(([entry]) => setFormVisible(entry.isIntersecting), { threshold: 0.05 });
+    io.observe(formRef.current);
+    return () => io.disconnect();
+  }, [driver]);
 
   if (error && !driver) return <ErrorBox>{error}</ErrorBox>;
   if (!driver) return <p className="loading">Loading…</p>;
@@ -113,7 +123,7 @@ export default function DriverPage() {
       </div>
 
       <aside>
-        <form className="card book" onSubmit={submit}>
+        <form className="card book" id="book" ref={formRef} onSubmit={submit}>
           <h2>Request this driver</h2>
           {driver.paused && <p className="alert">This driver is not taking new bookings right now.</p>}
           <label className="field">Start
@@ -154,6 +164,14 @@ export default function DriverPage() {
         </form>
         <AdSlot size="rectangle" />
       </aside>
+
+      {/* Phones: the booking form sits below the profile, so keep a shortcut to it on screen. */}
+      {!formVisible && !isSelf && (
+        <div className="book-cta">
+          <span><strong>{inr(driver.rate_hour)}</strong> per hour</span>
+          <button className="btn btn-primary" onClick={() => formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })}>Request this driver</button>
+        </div>
+      )}
     </div>
   );
 }
