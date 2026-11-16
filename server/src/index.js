@@ -13,6 +13,7 @@ import {
   driverPublic, photoOf, parseSlots, parseListing,
 } from './lib.js';
 import { addDemoDrivers } from './demo.js';
+import { notify, notifyAdmins, when } from './notify.js';
 
 // API_PORT, not PORT: dev tools often set PORT for the web server. Hosts that set PORT are honoured in production.
 const PORT = Number(process.env.API_PORT || (process.env.NODE_ENV === 'production' && process.env.PORT) || 4000);
@@ -206,6 +207,7 @@ app.post('/api/driver/apply', auth, upload, (req, res) => {
       listing.rate_week, listing.lat, listing.lng, listing.area_label, Date.now()
     );
     setAvailability(req.user.id, slots);
+    notifyAdmins('application', `${req.user.name} applied to be a driver`, `${listing.area_label} · ${exp} years experience`, '/admin');
     res.status(201).json(ownDriver(req.user.id));
   } catch (err) {
     discard();
@@ -331,7 +333,11 @@ app.post('/api/bookings', auth, (req, res) => {
     String(req.body.notes || '').trim().slice(0, 500),
     driver[PLANS[plan].rate] * units, Date.now()
   );
-  res.status(201).json(bookingView(q.get('SELECT * FROM bookings WHERE id = ?', Number(r.lastInsertRowid)), req.user.id));
+  const bookingId = Number(r.lastInsertRowid);
+  notify(driver.user_id, 'booking', `${req.user.name} wants to hire you`,
+    `${when(start)} · ${units} ${plan === 'hourly' ? 'hour' : plan === 'daily' ? 'day' : 'week'}${units === 1 ? '' : 's'} · ${pickup}`,
+    `/bookings/${bookingId}`);
+  res.status(201).json(bookingView(q.get('SELECT * FROM bookings WHERE id = ?', bookingId), req.user.id));
 });
 
 app.get('/api/bookings', auth, (req, res) => {
@@ -373,6 +379,16 @@ app.post('/api/bookings/:id/action', auth, (req, res) => {
     default:
       fail(400, 'Unknown action');
   }
+  // Tell the other person what just happened.
+  const otherId = isDriver ? b.customer_id : b.driver_id;
+  const text = {
+    accept: ['accepted your request', 'You can now see their phone number.'],
+    decline: ['declined your request', 'Try another driver for that time.'],
+    cancel: ['cancelled the booking', `It was for ${when(b.start_at)}.`],
+    complete: ['marked the job completed', 'Please rate your driver.'],
+    paid: ['marked your booking as paid', ''],
+  }[req.body.action];
+  notify(otherId, 'booking', `${req.user.name} ${text[0]}`, text[1], `/bookings/${b.id}`);
   res.json(bookingView(q.get('SELECT * FROM bookings WHERE id = ?', b.id), req.user.id));
 });
 
@@ -389,6 +405,8 @@ app.post('/api/bookings/:id/messages', auth, (req, res) => {
   if (!body) fail(400, 'Type a message');
   const r = q.run('INSERT INTO messages (booking_id, sender_id, body, created_at) VALUES (?, ?, ?, ?)',
     b.id, req.user.id, body, Date.now());
+  notify(b.driver_id === req.user.id ? b.customer_id : b.driver_id, 'message',
+    `New message from ${req.user.name}`, body.slice(0, 120), `/bookings/${b.id}`, { collapse: true });
   res.status(201).json(q.get('SELECT id, sender_id, body, created_at FROM messages WHERE id = ?', Number(r.lastInsertRowid)));
 });
 
@@ -403,7 +421,28 @@ app.post('/api/bookings/:id/review', auth, (req, res) => {
   const subject = b.driver_id === req.user.id ? b.customer_id : b.driver_id;
   q.run('INSERT INTO reviews (booking_id, author_id, subject_id, rating, comment, created_at) VALUES (?, ?, ?, ?, ?, ?)',
     b.id, req.user.id, subject, rating, String(req.body.comment || '').trim().slice(0, 500), Date.now());
+  notify(subject, 'review', `${req.user.name} rated you ${rating} out of 5`, '', `/bookings/${b.id}`);
   res.status(201).json(bookingView(b, req.user.id));
+});
+
+// ---------- notifications ----------
+app.get('/api/notifications', auth, (req, res) => {
+  res.json({
+    unread: q.get('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND read_at IS NULL', req.user.id).n,
+    items: q.all(
+      'SELECT id, kind, title, body, link, read_at, created_at FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 30',
+      req.user.id),
+  });
+});
+// Body: { id } for one, { link } for everything pointing at a page, or { all: true }.
+app.post('/api/notifications/read', auth, (req, res) => {
+  const now = Date.now();
+  const base = 'UPDATE notifications SET read_at = ? WHERE user_id = ? AND read_at IS NULL';
+  if (req.body.all) q.run(base, now, req.user.id);
+  else if (req.body.link) q.run(`${base} AND link = ?`, now, req.user.id, String(req.body.link));
+  else if (req.body.id) q.run(`${base} AND id = ?`, now, req.user.id, Number(req.body.id));
+  else fail(400, 'Say which notifications to mark as read');
+  res.json({ ok: true });
 });
 
 // ---------- admin ----------
@@ -443,6 +482,11 @@ app.post('/api/admin/drivers/:id/review', auth, adminOnly, (req, res) => {
       reason, Date.now(), d.user_id);
   } else {
     fail(400, 'Unknown decision');
+  }
+  if (req.body.decision === 'approve') {
+    notify(d.user_id, 'application', 'You are approved as a driver', 'Your profile is now visible to customers near you.', '/driver');
+  } else {
+    notify(d.user_id, 'application', 'Your driver application was not approved', 'Open it to see the reason and apply again.', '/driver');
   }
   res.json({ ok: true });
 });
