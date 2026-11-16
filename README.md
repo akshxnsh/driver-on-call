@@ -48,7 +48,7 @@ The terminal prints a "Network" address such as `http://192.168.1.20:5173`; open
 
 Demo mode is on by default, so the sign-in page lists sample accounts.
 
-1. **Customer:** sign in as *Priya Sharma*. On the home page search "MG Road Bengaluru", pick a start time during the day, and choose a driver. Send a request.
+1. **Customer:** sign in as *Priya Sharma*. On the home page search "MG Road Bengaluru", set From and To to a time during the day, press Find drivers, and choose one. Send a request.
 2. **Driver:** sign out, sign in as that driver, open *My bookings → Requests for me as driver*, accept. Both sides now see each other's phone number and can chat.
 3. **Finish:** as the driver, mark the job completed. Each side can then rate the other.
 4. **Become a driver:** sign in as *Arjun Mehta*, click *Register as driver*, fill the form and upload three files.

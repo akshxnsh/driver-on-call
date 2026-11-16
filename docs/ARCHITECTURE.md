@@ -56,14 +56,16 @@ Auth is a JWT (30 days) returned at sign-in, stored in `localStorage`, sent as `
 | `users` | Every account | `email`, `google_sub`, `name`, `phone`, `city`, `role` (user/admin), `is_demo` |
 | `driver_profiles` | One per user who applied | `status` (pending/approved/rejected), `rejection_reason`, licence and ID fields, `dl_file`, `id_file`, `photo_file`, `transmission`, `vehicle_types` (JSON), three rates, `lat`, `lng`, `area_label`, `paused` |
 | `availability` | Weekly working hours | `driver_id`, `weekday` (0 = Sunday), `start_min`, `end_min` |
-| `bookings` | A hire request and its life | `customer_id`, `driver_id`, `plan`, `units`, `start_at`, `end_at` (ms), pickup, `est_total`, `status`, `paid` |
+| `bookings` | A hire request and its life | `customer_id`, `driver_id`, `start_at`, `end_at` (ms), pickup, `est_total`, `status`, `paid`; `plan` and `units` record which rate priced it (hours when hourly, otherwise days) |
 | `messages` | Chat per booking | `booking_id`, `sender_id`, `body` |
 | `reviews` | One per person per booking | `booking_id`, `author_id`, `subject_id`, `rating`, `comment` |
 | `notifications` | In-app notifications | `user_id`, `kind` (booking/message/review/application), `title`, `body`, `link` (page to open), `read_at` |
 
 Booking status: `requested` → `accepted` → `completed`, or `requested` → `declined`, or `cancelled` from requested (customer) or accepted (either side).
 
-A driver is "listed" when `status = 'approved'` and `paused = 0`. A driver is "available" for a search when the start falls in their working hours for that weekday (hourly jobs must also end within them) and no `accepted` booking overlaps. See `availabilityIssue` in `server/src/lib.js`.
+A driver is "listed" when `status = 'approved'` and `paused = 0`. A driver is "available" for a span when the start falls in their working hours for that weekday (a same-day booking must also end within them) and no `accepted` booking overlaps. See `availabilityIssue` in `server/src/lib.js`.
+
+The price of a span comes from `quote()` in the same file; `quoteTotal()` in `client/src/api.js` repeats the rule for the live total in the request form. Change both together.
 
 ## API
 
@@ -75,12 +77,12 @@ All paths are under `/api`. "Auth" means a signed-in user.
 | POST `/auth/google` | Public | Body `credential` (Google ID token) and optional `nonce` (sent by the full-page route, must match the token). Verifies, creates or loads the user, returns JWT |
 | GET `/auth/demo-users`, POST `/auth/demo` | Demo mode only | List and sign in as seeded demo accounts |
 | GET `/me`, PUT `/me` | Auth | Read and update own profile (name, phone, city) |
-| GET `/drivers/search` | Public | Query: `lat`, `lng`, `radius`, `start`, `plan`, `units`, `sort`. Returns nearby listed drivers with distance, availability, estimated total |
+| GET `/drivers/search` | Public | Query: `lat`, `lng`, `radius`, `start`, `end` (ISO date-times), `sort`. Returns nearby listed drivers with distance, availability and the price for that span |
 | GET `/drivers/:id` | Public | Public profile, working hours, reviews. Never includes phone or documents |
 | GET `/driver/me` | Auth | Own driver application or listing |
 | POST `/driver/apply` | Auth | Multipart: fields plus `photo`, `dl_file`, `id_file`. Creates a pending application; allowed again after rejection |
 | PUT `/driver/me` | Approved driver | Edit rates, bio, location, working hours, pause |
-| POST `/bookings` | Auth with phone | Create a request; rejects if the driver is not available |
+| POST `/bookings` | Auth with phone | Body: `driver_id`, `start`, `end`, pickup fields. Creates a request; rejects if the driver is not available |
 | GET `/bookings?as=customer\|driver` | Auth | Own bookings in either role |
 | GET `/bookings/:id` | Participants | Detail. `other.phone` is null unless status is accepted or completed |
 | POST `/bookings/:id/action` | Participants | `accept`, `decline`, `complete`, `paid` (driver); `cancel` (see status rules) |

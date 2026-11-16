@@ -4,7 +4,7 @@ Last updated: 2026-11-16
 
 ## What it is
 
-A marketplace where a car owner hires an independent driver for their own car. The customer searches by location and time, picks a driver, and sends a request. The driver accepts, arrives at the pickup point, and drives the customer's vehicle. The model is "BlaBlaCar for hired drivers": trust-first profiles, request then accept, contact shared only after confirmation, money settled directly between the two people.
+A marketplace where a car owner hires an independent driver for their own car. The customer searches by location and a From/To time, picks a driver, and sends a request. The driver accepts, arrives at the pickup point, and drives the customer's vehicle. The model is "BlaBlaCar for hired drivers": trust-first profiles, request then accept, contact shared only after confirmation, money settled directly between the two people.
 
 ## Decisions made by the owner
 
@@ -12,6 +12,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | --- | --- |
 | Market | India first: rupees, +91 mobile numbers, Aadhaar / PAN / Voter ID / Passport as identity proof |
 | Matching | Customer picks a driver from a list and map, driver accepts or declines |
+| Booking times | Customer gives a From and a To date and time (decided 2026-11-17), not a start plus a number of hours |
 | Pricing | Each driver sets their own hourly, daily and weekly rate |
 | Revenue | Ad-based. Commission was rejected because customers and drivers can exchange numbers and bypass it |
 | Contact | Phone numbers are revealed to both sides only after the driver accepts |
@@ -33,8 +34,8 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | Maps and place search | Leaflet + OpenStreetMap tiles + Nominatim | Free, no API key. Nominatim's public server is rate-limited (about 1 request per second) and must be replaced before real traffic |
 | Chat | Tied to a booking request; polling every 3 seconds | Simple and reliable for a prototype. Swap to WebSockets when volume needs it |
 | One account, two roles | The same user can hire drivers and also be a driver | Matches the "Register as Driver" option in the brief |
-| Plan lengths | Hourly up to 16 hours, daily up to 30 days, weekly up to 12 weeks | Sensible caps to stop bad input |
-| Daily / weekly availability check | The start time must be inside the driver's working hours on the start day, and no accepted booking may overlap the whole span | Checking every individual day of a long hire is left for later |
+| Price for a span | Cheapest of the driver's own rates: hours × hourly rate capped at the day rate for up to 24 hours; beyond that, days (each started 24 hours) with full weeks at the weekly rate. Part-hours round up. Maximum 12 weeks | The owner asked for From/To inputs but did not set a pricing rule. This one never charges more than the driver's own day or week rate would. Open question: should a "day" mean 24 hours, or a working day of about 10 to 12 hours? |
+| Availability for long bookings | The From time must be inside the driver's working hours that day, and no accepted booking may overlap. A same-day booking must also end inside working hours | Checking every individual day of a multi-day hire (for example a Sunday off in the middle) is left for later |
 | "Mark as paid" | Only the driver can mark a booking paid | The driver is the one who receives the money |
 | Completing a job | Driver can mark an accepted job completed at any time | Lets the flow be demonstrated without waiting for the real date. Tighten before launch |
 | Notifications | In-app bell plus optional browser desktop alerts, polled every 10 seconds; chat messages collapse to one line per booking | Works with no third-party account. SMS / WhatsApp / email left as one hook because they need a paid provider |

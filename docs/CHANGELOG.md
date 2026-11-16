@@ -2,6 +2,19 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.5.0 — 2026-11-17 — Bookings by From and To
+
+Owner's decision: do not ask "when" and "how many hours"; ask for a From and a To date and time.
+
+- Search and the request form now have two date-time inputs, From and To. Moving From keeps the same length of booking. The hour / day / week choice is gone.
+- Price is worked out from the span using the driver's own rates, cheapest first: part-hours round up; up to 24 hours is hours × hourly rate, capped at the day rate; longer spans count days (each started 24 hours), with full weeks at the weekly rate and leftover days at the day rate. Example at ₹180 / ₹1,200 / ₹7,000: 4 hours ₹720, 10 hours ₹1,200, 3 days ₹3,600, 9 days ₹9,400.
+- Availability: the From time must be inside the driver's working hours for that day; a booking that starts and ends on the same day must also end inside them; no accepted booking may overlap.
+- Limits: To must be after From, From must be in the future, and a booking can be at most 12 weeks.
+- Bookings and notifications show the range ("Thu 19 Nov, 10:00 am to 2:30 pm · 5 hours").
+- API: `/drivers/search` and `POST /bookings` take `start` and `end` instead of `start`, `plan` and `units`. The `plan` and `units` columns remain and now record which rate was used.
+
+Tested in the browser: prices for 4 hours, 10 hours, 3 days and 9 days; rejection of a To before From, a missing To, a 13-week span and a past From; "Ends after working hours"; a real booking and its notification text; overlap blocking after acceptance; the search and request forms at phone size. The live total in the request form gives the same figures as the server.
+
 ## 0.4.1 — 2026-11-17 — Results only after searching
 
 - The home page opens with just the search form. The driver count and list appear only after pressing "Find drivers"; choosing a location no longer searches on its own.
