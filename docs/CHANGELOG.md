@@ -2,6 +2,21 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.4.0 — 2026-11-17 — Simpler, calmer interface
+
+Owner's feedback: too many small grey descriptions made the screens feel congested.
+
+- Removed most helper text. Each screen keeps at most one short note, and only where it prevents a mistake or builds trust (payment note on the request form, phone-number privacy, document privacy).
+- Search form reduced to three inputs: pickup location, when, and "For 4 hours" (number and unit together). Distance and sort moved next to the results.
+- Location box is now one input with a Search button; focusing it offers "Use my current location" as the first suggestion.
+- Driver rows show name, verified tick, rating, experience, distance and price. Car types and transmission moved to the profile. Only unavailable drivers get a status line.
+- Driver profile: rates first, working hours summarised in one line ("Every day, 6 am to 11 pm") instead of a seven-row table, verification shown by the badge alone.
+- Booking page: one "When" line instead of start, end and plan; a "Paid" tag instead of a sentence.
+- Fewer ad slots (search: one in the list and one at the bottom; driver page and booking list: one at the bottom), drawn more quietly.
+- Styling: larger base text (16 px), more padding and spacing, no card shadows, one-line footer.
+
+Checked in the browser at 1200 px and 375 px: search, results, driver profile and request form, bookings list, driver dashboard. No sideways scrolling on the phone size.
+
 ## 0.3.0 — 2026-11-17 — Phone UI
 
 - Below 720 px the app switches to a phone layout: a compact top bar (name, bell, avatar) and a tab bar fixed to the bottom of the screen (Find, Bookings, Drive, Admin for admins, Account).

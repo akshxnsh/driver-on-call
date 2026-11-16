@@ -23,6 +23,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | Extras in v1 | Map view, in-app chat, ratings and reviews, ad placeholders |
 | Display name | The interface shows **DOC** (decided 2026-11-16) |
 | Source control | Commit to git as work progresses; private GitHub repository |
+| Interface style | Minimal and easy to scan: few small grey descriptions, generous spacing (decided 2026-11-17). New screens should add helper text only where it prevents a mistake |
 
 ## Decisions made during the build (owner said "use your judgment")
 
