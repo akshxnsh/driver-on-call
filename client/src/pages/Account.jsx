@@ -146,13 +146,8 @@ export function Profile() {
         {saved && <p className="alert alert-ok">Profile saved.</p>}
         <button className="btn btn-primary">Save</button>
       </form>
-      {!firstTime && (
-        <section className="card account-links">
-          <h2>Account</h2>
-          <p>{user.email}</p>
-          <button className="btn btn-ghost" onClick={logout}>Sign out</button>
-        </section>
-      )}
+      {/* Always shown, including before the profile is complete, so nobody is stuck signed in. */}
+      <button className="btn btn-ghost btn-block" onClick={logout}>Sign out</button>
     </div>
   );
 }

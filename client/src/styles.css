@@ -248,7 +248,6 @@ legend { font-weight: 800; font-size: 1.05rem; padding: 0 12px 0 0; }
 
 /* phone-only pieces: hidden on wider screens */
 .tabbar, .view-switch, .book-cta { display: none; }
-.account-links .btn { margin-top: 4px; }
 
 @media (max-width: 860px) {
   .results-grid, .two-col, .how { grid-template-columns: 1fr; }
