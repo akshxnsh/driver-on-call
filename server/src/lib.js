@@ -10,11 +10,41 @@ export const fail = (status, message) => {
   throw new HttpError(status, message);
 };
 
-export const PLANS = {
-  hourly: { ms: 3600e3, rate: 'rate_hour', max: 16 },
-  daily: { ms: 24 * 3600e3, rate: 'rate_day', max: 30 },
-  weekly: { ms: 7 * 24 * 3600e3, rate: 'rate_week', max: 12 },
-};
+const HOUR = 3600e3;
+export const MAX_SPAN = 84 * 24 * HOUR; // 12 weeks
+
+/**
+ * Price for hiring a driver from start to end, using the cheapest of the driver's own rates.
+ * - Part-hours round up. A job of up to 24 hours costs hours x hourly rate, capped at the day rate.
+ * - Longer jobs are counted in days (each started 24 hours is a day): full weeks at the weekly
+ *   rate, leftover days at the day rate (capped at one more week), never more than days x day rate.
+ * The same rule is repeated in client/src/api.js for the live total; keep the two in step.
+ */
+export function quote(rates, start, end) {
+  const hours = Math.max(1, Math.ceil((end - start) / HOUR));
+  if (hours <= 24) {
+    const byHour = hours * rates.rate_hour;
+    return byHour <= rates.rate_day
+      ? { total: byHour, plan: 'hourly', units: hours }
+      : { total: rates.rate_day, plan: 'daily', units: 1 };
+  }
+  const days = Math.ceil(hours / 24);
+  const weeks = Math.floor(days / 7), rest = days % 7;
+  const byWeek = weeks * rates.rate_week + Math.min(rest * rates.rate_day, rates.rate_week);
+  const byDay = days * rates.rate_day;
+  return weeks > 0 && byWeek < byDay
+    ? { total: byWeek, plan: 'weekly', units: days }
+    : { total: byDay, plan: 'daily', units: days };
+}
+
+/** "4 hours", "3 days", "2 weeks": how long a span is, in the unit people would say. */
+export function durationLabel(start, end) {
+  const hours = Math.max(1, Math.ceil((end - start) / HOUR));
+  const say = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  if (hours < 24) return say(hours, 'hour');
+  const days = Math.ceil(hours / 24);
+  return days % 7 === 0 ? say(days / 7, 'week') : say(days, 'day');
+}
 
 export function distanceKm(lat1, lng1, lat2, lng2) {
   const rad = (d) => (d * Math.PI) / 180;
@@ -27,12 +57,12 @@ export function distanceKm(lat1, lng1, lat2, lng2) {
 /**
  * Is the driver free for [start, end)?
  * - The start must fall inside the driver's working hours for that weekday.
- * - Hourly jobs must also end inside the same day's working hours.
+ * - A job that starts and ends on the same day must also end inside those hours.
  * - No accepted booking may overlap the span.
  * Weekdays and hours use the server's local time zone (run it in IST for India).
  */
-export function availabilityIssue(driverId, start, end, plan, ignoreBookingId = 0) {
-  const s = new Date(start);
+export function availabilityIssue(driverId, start, end, ignoreBookingId = 0) {
+  const s = new Date(start), e = new Date(end);
   const slot = q.get(
     'SELECT start_min, end_min FROM availability WHERE driver_id = ? AND weekday = ?',
     driverId, s.getDay()
@@ -40,9 +70,8 @@ export function availabilityIssue(driverId, start, end, plan, ignoreBookingId = 
   if (!slot) return 'Does not work on that day';
   const startMin = s.getHours() * 60 + s.getMinutes();
   if (startMin < slot.start_min || startMin >= slot.end_min) return 'Outside working hours';
-  if (plan === 'hourly') {
-    const endMin = startMin + (end - start) / 60000;
-    if (endMin > slot.end_min) return 'Job runs past working hours';
+  if (s.toDateString() === e.toDateString() && e.getHours() * 60 + e.getMinutes() > slot.end_min) {
+    return 'Ends after working hours';
   }
   const clash = q.get(
     `SELECT id FROM bookings WHERE driver_id = ? AND status = 'accepted'
