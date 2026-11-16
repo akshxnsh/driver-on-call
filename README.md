@@ -1,0 +1,66 @@
+# Driver-On-Call (DOC)
+
+The app shows its name as **DOC** in the interface. "Driver-On-Call" remains the project name and the name on Google's sign-in screen.
+
+Find a verified driver near you and hire them by the hour, day or week. The driver comes to your location at the agreed time and drives **your own vehicle**.
+
+This is a working web prototype: React frontend, Node/Express API, SQLite database.
+
+## Run it
+
+Needs Node.js 22.13 or newer (it uses Node's built-in SQLite, so there is no database to install).
+
+First time only:
+
+```bash
+npm run setup
+```
+
+Every time:
+
+```bash
+npm run dev
+```
+
+Then open http://localhost:5173. The API runs on port 4000 and the web app proxies `/api` to it.
+
+| Command | What it does |
+| --- | --- |
+| `npm run setup` | Installs everything, creates `server/.env`, seeds demo data |
+| `npm run dev` | Starts API and web app with live reload |
+| `npm run reset` | Deletes the database and uploads, then seeds fresh demo data (stop `dev` first) |
+| `npm run build` then `npm start` | Production mode: Express serves the built web app on one port |
+
+## Try the full flow
+
+Demo mode is on by default, so the sign-in page lists sample accounts.
+
+1. **Customer:** sign in as *Priya Sharma*. On the home page search "MG Road Bengaluru", pick a start time during the day, and choose a driver. Send a request.
+2. **Driver:** sign out, sign in as that driver, open *My bookings → Requests for me as driver*, accept. Both sides now see each other's phone number and can chat.
+3. **Finish:** as the driver, mark the job completed. Each side can then rate the other.
+4. **Become a driver:** sign in as *Arjun Mehta*, click *Register as driver*, fill the form and upload three files.
+5. **Admin:** sign in as *Admin (demo)*, open *Admin*, view the documents, approve or reject. Approved drivers appear in search.
+
+Searching somewhere other than Bengaluru? When no drivers are found, demo mode shows an *Add demo drivers near here* button.
+
+## Google sign-in
+
+Set up on 2026-11-16 for local development:
+
+- Google Cloud project **Driver-On-Call** (ID `driver-on-call-514918`), owned by the project's dev Google account.
+- Consent screen: app name "Driver-On-Call", audience **External**, publishing status **Testing**.
+- OAuth client "Driver-On-Call web (local dev)", type Web application, allowed origins `http://localhost:5173` and `http://localhost`. No client secret is used: the app only verifies Google ID tokens.
+- The same client has one authorised redirect URI, `http://localhost:5173/login`. It serves the "Sign in with Google in this tab instead" link on the sign-in page, a full-page fallback for browsers that block the Google pop-up.
+- The Client ID and the admin email live in `server/.env` (`GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`), which is not committed.
+
+While the status is **Testing**, only Google accounts listed under *Google Auth Platform → Audience → Test users* can sign in (limit 100). To let anyone sign in, press *Publish app* on that page; basic sign-in needs no Google verification.
+
+To set it up again elsewhere (for example a deployed site): add the site's `https://` address under the client's *Authorised JavaScript origins* and `<address>/login` under *Authorised redirect URIs*, put the Client ID in that server's environment, and list admin emails in `ADMIN_EMAILS`. Restart the server after changing `.env`.
+
+Before going live set `DEMO_MODE=false`; this removes the demo login and the demo-driver button.
+
+## Documentation
+
+- [docs/PRODUCT.md](docs/PRODUCT.md): what the product does, every decision taken and why, where it differs from BlaBlaCar, open risks.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code layout, data model, API reference, security notes.
+- [docs/CHANGELOG.md](docs/CHANGELOG.md): what changed and when.
