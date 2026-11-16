@@ -1,0 +1,17 @@
+{
+  "name": "driver-on-call",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Driver-On-Call: find and hire verified drivers nearby, by the hour, day or week.",
+  "scripts": {
+    "setup": "npm install && cd server && npm install && cd ../client && npm install && cd .. && npm run seed",
+    "seed": "npm run seed --prefix server",
+    "reset": "node -e \"for (const d of ['server/data','server/uploads']) require('fs').rmSync(d,{recursive:true,force:true})\" && npm run seed",
+    "dev": "concurrently -n api,web -c green,cyan \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
