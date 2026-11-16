@@ -36,6 +36,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | Daily / weekly availability check | The start time must be inside the driver's working hours on the start day, and no accepted booking may overlap the whole span | Checking every individual day of a long hire is left for later |
 | "Mark as paid" | Only the driver can mark a booking paid | The driver is the one who receives the money |
 | Completing a job | Driver can mark an accepted job completed at any time | Lets the flow be demonstrated without waiting for the real date. Tighten before launch |
+| Notifications | In-app bell plus optional browser desktop alerts, polled every 10 seconds; chat messages collapse to one line per booking | Works with no third-party account. SMS / WhatsApp / email left as one hook because they need a paid provider |
 | Demo data | 8 approved drivers near MG Road Bengaluru, 2 customers, 1 admin, 1 pending application | Enough to exercise every screen |
 
 ## Where we deliberately do not copy BlaBlaCar
@@ -59,9 +60,9 @@ These are not solved by the prototype and need a decision before a real launch.
 5. **No-shows and cancellations.** Nothing stops either side cancelling late. Options: show cancellation counts on profiles, or suspend repeat offenders.
 6. **Safety features.** No SOS button, trip sharing or live tracking yet.
 7. **Reviews.** Consider BlaBlaCar-style "both submit before either is shown".
-8. **Notifications.** There is no SMS, email or push. A driver sees a new request only when they open the app. This is the most important gap for real use.
+8. **Notifications outside the app.** In-app notifications and desktop alerts exist (since 0.2.0), but they only reach someone who has DOC open in a browser tab. A driver with the app closed still hears nothing. Real use needs SMS or WhatsApp (for example MSG91 or Twilio in India), which needs a paid provider account and, for SMS, DLT template registration. The hook is `notify()` in `server/src/notify.js`.
 9. **Time zone.** Working hours are evaluated in the server's time zone. Run the server in IST, or store a time zone per driver if the service expands.
 
 ## Not built yet
 
-Notifications, online payment, live tracking, outstation / one-way trip types, driver earnings report, customer saved addresses and cars, admin user management, real ad network integration, automated tests, deployment.
+SMS / WhatsApp / email notifications, online payment, live tracking, outstation / one-way trip types, driver earnings report, customer saved addresses and cars, admin user management, real ad network integration, automated tests, deployment.

@@ -2,6 +2,17 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.2.0 — 2026-11-17 — Notifications
+
+- New `notifications` table and `server/src/notify.js`. Every event passes through `notify()`: booking requested, accepted, declined, cancelled, completed, marked paid, new chat message, review received, driver application submitted (to admins), application approved or rejected.
+- Chat messages collapse: several unread messages on one booking show as a single notification with the latest text.
+- Bell in the top bar with an unread count, a panel of the 30 most recent notifications, "Mark all as read", and the unread count in the browser tab title. Checked every 10 seconds.
+- Opening a booking marks that booking's notifications as read.
+- Optional desktop alerts through the browser's Notification API, shown when the DOC tab is in the background.
+- Top bar now moves the menu to its own row below 860 px so the bell fits.
+
+Tested in the browser with two demo accounts: each event reaches the right person, the badge appears within 10 seconds, clicking an item opens the booking and clears it, and one user cannot read or clear another's notifications. Desktop alerts could not be tested because the test browser blocks notification permission. There is still no SMS, WhatsApp or email: a person with the app closed is not reached.
+
 ## 0.1.2 — 2026-11-16 — Full-page Google sign-in, UI renamed to DOC
 
 - Sign-in page has a second route, "Sign in with Google in this tab instead": a full-page redirect to Google that returns an ID token to `/login`. It exists for browsers that block the Google pop-up. The server checks the nonce on this route.

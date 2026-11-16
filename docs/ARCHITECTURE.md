@@ -15,6 +15,7 @@ server/
     index.js            Express app: all routes, auth, uploads, error handling
     db.js               opens the database, creates tables, small query helper
     lib.js              business rules: availability check, distance, validation, public driver shape
+    notify.js           notifications table and notify(): the one place every event passes through
     demo.js             demo driver generator (seed and DEMO_MODE only)
     seed.js             first-run setup: creates .env and demo data
 client/
@@ -24,6 +25,7 @@ client/
     auth.jsx            auth context (current user, server config)
     api.js              fetch wrapper and formatting helpers
     components.jsx      Avatar, Rating, AdSlot, LocationPicker, MapView, ListingFields
+    Notifications.jsx   bell, notification panel, desktop alerts (polls every 10 s)
     styles.css          all styling
     pages/
       Search.jsx        home: search form, results list, map
@@ -51,6 +53,7 @@ Auth is a JWT (30 days) returned at sign-in, stored in `localStorage`, sent as `
 | `bookings` | A hire request and its life | `customer_id`, `driver_id`, `plan`, `units`, `start_at`, `end_at` (ms), pickup, `est_total`, `status`, `paid` |
 | `messages` | Chat per booking | `booking_id`, `sender_id`, `body` |
 | `reviews` | One per person per booking | `booking_id`, `author_id`, `subject_id`, `rating`, `comment` |
+| `notifications` | In-app notifications | `user_id`, `kind` (booking/message/review/application), `title`, `body`, `link` (page to open), `read_at` |
 
 Booking status: `requested` → `accepted` → `completed`, or `requested` → `declined`, or `cancelled` from requested (customer) or accepted (either side).
 
@@ -77,6 +80,8 @@ All paths are under `/api`. "Auth" means a signed-in user.
 | POST `/bookings/:id/action` | Participants | `accept`, `decline`, `complete`, `paid` (driver); `cancel` (see status rules) |
 | GET, POST `/bookings/:id/messages` | Participants | Chat. GET takes `after` (last seen id) |
 | POST `/bookings/:id/review` | Participants | After completion, once per person |
+| GET `/notifications` | Auth | `{ unread, items }`: unread count and the 30 most recent |
+| POST `/notifications/read` | Auth | Body `{ id }`, `{ link }` (everything pointing at one page) or `{ all: true }` |
 | GET `/admin/drivers?status=` | Admin | Applications with full details |
 | POST `/admin/drivers/:id/review` | Admin | `decision`: approve or reject (reject needs a reason) |
 | GET `/admin/stats` | Admin | Counts |
