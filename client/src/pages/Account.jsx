@@ -77,14 +77,11 @@ export function Login() {
     <div className="narrow">
       <section className="card">
         <h1>Sign in</h1>
-        <p className="muted">One account works for both hiring a driver and registering as one.</p>
         {config.googleClientId
           ? (
             <>
               <div ref={googleBtn} className="google-btn" />
-              <p className="hint">Nothing happens when you click? Your browser may be blocking the pop-up.{' '}
-                <button type="button" className="link-btn" onClick={fullPageSignIn}>Sign in with Google in this tab instead</button>
-              </p>
+              <button type="button" className="link-btn" onClick={fullPageSignIn}>Pop-up blocked? Sign in here instead</button>
             </>
           )
           : <p className="alert">Google sign-in is not set up on this server yet. Add <code>GOOGLE_CLIENT_ID</code> to <code>server/.env</code> to switch it on (see the README).</p>}
@@ -94,7 +91,6 @@ export function Login() {
       {config.demoMode && (
         <section className="card">
           <h2>Demo accounts</h2>
-          <p className="muted">Demo mode is on. Pick a sample account to try the app without Google.</p>
           <ul className="demo-list">
             {demoUsers.map((u) => (
               <li key={u.id}>
@@ -139,12 +135,11 @@ export function Profile() {
     <div className="narrow">
       <form className="card" onSubmit={submit}>
         <h1>{firstTime ? 'Complete your profile' : 'Your profile'}</h1>
-        {firstTime && <p className="muted">We need a few details before you can book a driver or register as one.</p>}
         <label className="field">Full name <input {...field('name')} required autoComplete="name" /></label>
         <label className="field">Email <input value={user.email} disabled /></label>
         <label className="field">Mobile number
           <div className="prefix"><span>+91</span><input {...field('phone')} required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} placeholder="10-digit number" autoComplete="tel-national" /></div>
-          <span className="hint">Shared with a driver only after they accept your booking.</span>
+          <span className="hint">Shared only after a booking is accepted.</span>
         </label>
         <label className="field">City <input {...field('city')} required placeholder="e.g. Bengaluru" /></label>
         <ErrorBox>{error}</ErrorBox>
@@ -154,7 +149,7 @@ export function Profile() {
       {!firstTime && (
         <section className="card account-links">
           <h2>Account</h2>
-          <p className="muted">Signed in as {user.email}</p>
+          <p>{user.email}</p>
           <button className="btn btn-ghost" onClick={logout}>Sign out</button>
         </section>
       )}

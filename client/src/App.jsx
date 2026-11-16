@@ -73,10 +73,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <div className="wrap">
-          <p><strong>DOC</strong> connects car owners with independent, document-verified drivers. Payment is settled directly between you and the driver.</p>
-          <p className="muted">Prototype build. Map data © OpenStreetMap contributors.</p>
-        </div>
+        <div className="wrap">DOC · Prototype · Map data © OpenStreetMap contributors</div>
       </footer>
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen (hidden on wider screens). */}

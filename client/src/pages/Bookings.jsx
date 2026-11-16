@@ -22,14 +22,14 @@ export function BookingList() {
       <h1>My bookings</h1>
       {isDriver && (
         <div className="tabs" role="tablist">
-          <button role="tab" aria-selected={as === 'customer'} onClick={() => setAs('customer')}>Drivers I hired</button>
-          <button role="tab" aria-selected={as === 'driver'} onClick={() => setAs('driver')}>Requests for me as driver</button>
+          <button role="tab" aria-selected={as === 'customer'} onClick={() => setAs('customer')}>I hired</button>
+          <button role="tab" aria-selected={as === 'driver'} onClick={() => setAs('driver')}>I am driving</button>
         </div>
       )}
       <ErrorBox>{error}</ErrorBox>
       {!rows ? <p className="loading">Loading…</p> : rows.length === 0 ? (
         <div className="card empty">
-          <p>{as === 'driver' ? 'No booking requests yet. Customers near your base location will find you in search.' : 'You have not requested a driver yet.'}</p>
+          <p>{as === 'driver' ? 'No requests yet.' : 'No bookings yet.'}</p>
           {as === 'customer' && <Link className="btn btn-primary" to="/">Find a driver</Link>}
         </div>
       ) : (
@@ -39,8 +39,8 @@ export function BookingList() {
               <Link to={`/bookings/${b.id}`} className="card booking-row">
                 <Avatar name={b.other.name} photo={b.other.photo} size={48} />
                 <div className="booking-row-main">
-                  <b>{b.other.name}</b> <span className="muted">· {b.role === 'driver' ? 'customer' : 'driver'}</span>
-                  <p className="muted">{fmtDateTime(b.start_at)} · {plural(b.units, PLAN_UNIT[b.plan])} · {b.pickup_label}</p>
+                  <b>{b.other.name}</b>
+                  <p>{fmtDateTime(b.start_at)} · {plural(b.units, PLAN_UNIT[b.plan])}</p>
                 </div>
                 <div className="booking-row-side"><StatusChip status={b.status} /><strong>{inr(b.est_total)}</strong></div>
               </Link>
@@ -101,13 +101,11 @@ export function BookingDetail() {
             <StatusChip status={b.status} />
           </div>
           <dl className="facts">
-            <div><dt>Starts</dt><dd>{fmtDateTime(b.start_at)}</dd></div>
-            <div><dt>Ends</dt><dd>{fmtDateTime(b.end_at)}</dd></div>
-            <div><dt>Plan</dt><dd>{plural(b.units, PLAN_UNIT[b.plan])}</dd></div>
+            <div><dt>When</dt><dd>{fmtDateTime(b.start_at)} · {plural(b.units, PLAN_UNIT[b.plan])}</dd></div>
             <div><dt>Pickup</dt><dd>{b.pickup_label} <a href={`https://www.openstreetmap.org/?mlat=${b.lat}&mlon=${b.lng}#map=16/${b.lat}/${b.lng}`} target="_blank" rel="noreferrer">map</a></dd></div>
             {b.vehicle_desc && <div><dt>Car</dt><dd>{b.vehicle_desc}</dd></div>}
             {b.notes && <div><dt>Note</dt><dd>{b.notes}</dd></div>}
-            <div><dt>Estimated total</dt><dd><strong>{inr(b.est_total)}</strong> · {b.paid ? 'marked as paid' : 'pay the driver directly (cash or UPI)'}</dd></div>
+            <div><dt>Total</dt><dd><strong>{inr(b.est_total)}</strong> {b.paid && <span className="chip chip-accepted">Paid</span>}</dd></div>
           </dl>
 
           <ErrorBox>{error}</ErrorBox>
@@ -128,7 +126,6 @@ export function BookingDetail() {
               <button className="btn btn-danger" disabled={busy} onClick={() => act('cancel', 'Cancel this booking?')}>Cancel booking</button>
             )}
           </div>
-          {b.status === 'requested' && !driver && <p className="hint">Waiting for {b.other.name} to accept. You can message them in the meantime.</p>}
         </section>
 
         {b.status === 'completed' && <ReviewBox b={b} onDone={setB} />}
@@ -143,9 +140,8 @@ export function BookingDetail() {
           <Rating avg={b.other.rating_avg} count={b.other.rating_count} />
           {contactOpen
             ? <a className="btn btn-primary btn-block" href={`tel:${b.other.phone}`}>📞 {b.other.phone}</a>
-            : <p className="hint">Phone numbers are shared once the driver accepts the request.</p>}
+            : <p className="hint">Phone number appears once the request is accepted.</p>}
         </section>
-        <AdSlot size="rectangle" />
       </aside>
     </div>
   );
@@ -182,8 +178,8 @@ function ReviewBox({ b, onDone }) {
             className={n <= rating ? 'star' : 'star-off'} onClick={() => setRating(n)}>★</button>
         ))}
       </div>
-      <label className="field">Comment <span className="muted">(optional)</span>
-        <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} />
+      <label className="field">Comment
+        <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional" />
       </label>
       <ErrorBox>{error}</ErrorBox>
       <button className="btn btn-primary">Submit review</button>
@@ -234,9 +230,9 @@ function Chat({ booking }) {
 
   return (
     <section className="card chat">
-      <h2>Messages with {booking.other.name}</h2>
+      <h2>Messages</h2>
       <div className="chat-box" ref={box}>
-        {msgs.length === 0 && <p className="muted">No messages yet. Agree on the details here.</p>}
+        {msgs.length === 0 && <p className="muted">No messages yet.</p>}
         {msgs.map((m) => (
           <div key={m.id} className={`bubble ${m.sender_id === user.id ? 'bubble-me' : ''}`}>
             {m.body}<time>{new Date(m.created_at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</time>

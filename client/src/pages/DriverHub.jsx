@@ -26,8 +26,7 @@ export default function DriverHub() {
       <div className="narrow"><section className="card">
         <h1>Application under review</h1>
         <p><StatusChip status="pending" /></p>
-        <p>Thanks for applying. Our team is checking your driving licence and identity proof. Once approved, your profile becomes visible to customers near <b>{profile.area_label}</b>.</p>
-        <p className="muted">You can keep using the app as a customer in the meantime.</p>
+        <p>We are checking your documents. You will get a notification when you are approved.</p>
       </section></div>
     );
   }
@@ -36,7 +35,6 @@ export default function DriverHub() {
       <div className="narrow"><section className="card">
         <h1>Application not approved</h1>
         <p><StatusChip status="rejected" /></p>
-        <p>Reason from our team:</p>
         <blockquote>{profile.rejection_reason}</blockquote>
         <button className="btn btn-primary" onClick={() => setReapply(true)}>Fix and apply again</button>
       </section></div>
@@ -75,7 +73,7 @@ function ApplyForm({ previous, onDone }) {
     <div className="narrow-wide">
       <form className="card form-long" onSubmit={submit}>
         <h1>Register as a driver</h1>
-        <p className="muted">Fill in your details and upload your documents. Our team reviews every application; you are listed and visible to customers only after approval.</p>
+        <p>We review every application before listing you.</p>
 
         <fieldset>
           <legend>Licence and identity</legend>
@@ -94,7 +92,7 @@ function ApplyForm({ previous, onDone }) {
 
         <fieldset>
           <legend>Documents</legend>
-          <p className="hint">JPG, PNG or WebP (PDF also accepted for documents), up to 5 MB each. Documents are seen only by our review team; your photo is shown on your public profile.{previous && ' Leave a file empty to keep the one you uploaded before.'}</p>
+          <p className="hint">Photos or PDF, up to 5 MB each. Only our review team sees your documents.{previous && ' Leave a file empty to keep the earlier one.'}</p>
           <div className="grid-3">
             <label className="field">Your photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required={!previous?.photo_file} /></label>
             <label className="field">Driving licence<input type="file" name="dl_file" accept="image/jpeg,image/png,image/webp,application/pdf" required={!previous?.dl_file} /></label>
@@ -133,7 +131,7 @@ function Dashboard({ profile, onSaved }) {
       <section className="card dash-head">
         <div>
           <h1>Driver dashboard</h1>
-          <p><StatusChip status="approved" /> {paused ? 'Your listing is paused and hidden from search.' : 'Your listing is live and visible to customers.'}</p>
+          <p>{paused ? 'Your listing is paused.' : 'Your listing is live.'}</p>
         </div>
         <div className="actions">
           <Link className="btn btn-primary" to="/bookings">Booking requests</Link>
@@ -144,7 +142,7 @@ function Dashboard({ profile, onSaved }) {
         <h2>Your listing</h2>
         <label className="check pause">
           <input type="checkbox" checked={paused} onChange={(e) => setPaused(e.target.checked)} />
-          Pause my listing (stop receiving new requests)
+          Pause my listing
         </label>
         <ListingFields value={listing} onChange={setListing} />
         <ErrorBox>{error}</ErrorBox>

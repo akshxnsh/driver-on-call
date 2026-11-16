@@ -87,7 +87,7 @@ export default function NotificationBell() {
             <b>Notifications</b>
             {data.unread > 0 && <button className="link-btn" onClick={readAll}>Mark all as read</button>}
           </div>
-          {data.items.length === 0 && <p className="muted bell-empty">Nothing yet. Booking requests, replies and messages will show up here.</p>}
+          {data.items.length === 0 && <p className="muted bell-empty">Nothing yet.</p>}
           <ul>
             {data.items.map((n) => (
               <li key={n.id}>
@@ -105,8 +105,7 @@ export default function NotificationBell() {
                 Turn on desktop alerts
               </button>
             )}
-            {permission === 'granted' && <span className="muted">Desktop alerts are on while DOC is open in a tab.</span>}
-            {permission === 'denied' && <span className="muted">Desktop alerts are blocked in your browser settings.</span>}
+            {permission === 'granted' && <span className="muted">Desktop alerts are on.</span>}
           </div>
         </div>
       )}
