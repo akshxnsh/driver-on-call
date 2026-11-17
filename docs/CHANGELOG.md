@@ -6,7 +6,7 @@ Newest first. Add an entry whenever behaviour, data model or a product decision 
 
 - `server/src/otp.js` can send and check codes through Twilio Verify. It switches on when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID` are set in `server/.env`; otherwise demo mode (code shown on screen) applies as before. Twilio creates and checks the code, so none is stored here. Our own limits (30 s between sends, 5 an hour, 5 wrong tries) still apply on top of Twilio's.
 - Setup steps and the trial limits (only up to 5 verified numbers can be texted) are in the README.
-- Tested against a local fake Twilio server: correct request (address, login, form fields), wrong code rejected, right code verifies, a trial refusal shows a clear message, and no code leaks to the page in Twilio mode. **Not tested against the real Twilio**: that needs your credentials.
+- Tested against a local fake Twilio server: correct request (address, login, form fields), wrong code rejected, right code verifies, a trial refusal shows a clear message, and no code leaks to the page in Twilio mode. Then tested against the real Twilio on 2026-11-17: one real text was sent to the owner's own verified number, the code was entered in the app and the number became verified. On the trial, Twilio's default Verify service is used (a trial account cannot create its own), so the message wording is Twilio's.
 
 ## 0.6.0 — 2026-11-17 — Mobile number verification (OTP)
 
