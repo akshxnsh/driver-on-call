@@ -106,6 +106,8 @@ check('a 1 km radius returns only the closest drivers (minimum radius is 1 km)',
 
   section('3. Phone verification gates booking');
   const fresh = mkUser('fresh@example.test');
+  check('a user with no phone number can still search drivers', (await call(fresh.token, 'GET', `/drivers/search?lat=12.9756&lng=77.605&start=${encodeURIComponent(at(day, 10))}&end=${encodeURIComponent(at(day, 12))}`)).j?.drivers?.length === 8);
+  check('and open a driver profile and see their own empty bookings list', (await call(fresh.token, 'GET', `/drivers/${R}`)).s === 200 && (await call(fresh.token, 'GET', '/bookings')).j.length === 0);
   check('unverified user cannot book', (await book(fresh.token, R, at(day, 10), at(day, 12))).s === 400);
   check('send code needs a saved number', (await call(fresh.token, 'POST', '/me/phone/send-otp')).s === 400);
   check('bad number is rejected', (await call(fresh.token, 'PUT', '/me', { name: 'Fresh User', phone: '12345', city: 'X' })).s === 400);
