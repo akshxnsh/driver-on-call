@@ -14,6 +14,7 @@ import {
 } from './lib.js';
 import { addDemoDrivers } from './demo.js';
 import { notify, notifyAdmins, when } from './notify.js';
+import { phoneVerified, sendOtp, verifyOtp } from './otp.js';
 
 // API_PORT, not PORT: dev tools often set PORT for the web server. Hosts that set PORT are honoured in production.
 const PORT = Number(process.env.API_PORT || (process.env.NODE_ENV === 'production' && process.env.PORT) || 4000);
@@ -56,7 +57,7 @@ const adminOnly = (req, _res, next) => {
 function me(user) {
   const d = q.get('SELECT status, paused FROM driver_profiles WHERE user_id = ?', user.id);
   return {
-    id: user.id, name: user.name, email: user.email, phone: user.phone, city: user.city,
+    id: user.id, name: user.name, email: user.email, phone: user.phone, phone_verified: phoneVerified(user), city: user.city,
     photo_url: user.photo_url, role: user.role,
     driver_status: d ? d.status : null,
   };
@@ -124,8 +125,16 @@ app.put('/api/me', auth, (req, res) => {
   if (name.length < 2) fail(400, 'Enter your full name');
   if (!/^(\+91)?[6-9]\d{9}$/.test(phone)) fail(400, 'Enter a valid 10-digit Indian mobile number');
   if (!city) fail(400, 'Enter your city');
-  q.run('UPDATE users SET name = ?, phone = ?, city = ? WHERE id = ?',
-    name, phone.startsWith('+91') ? phone : `+91${phone}`, city, req.user.id);
+  const fullPhone = phone.startsWith('+91') ? phone : `+91${phone}`;
+  // A different number has to be verified again.
+  const verifiedAt = fullPhone === req.user.phone ? req.user.phone_verified_at : null;
+  q.run('UPDATE users SET name = ?, phone = ?, city = ?, phone_verified_at = ? WHERE id = ?',
+    name, fullPhone, city, verifiedAt, req.user.id);
+  res.json(me(q.get('SELECT * FROM users WHERE id = ?', req.user.id)));
+});
+app.post('/api/me/phone/send-otp', auth, async (req, res) => res.json(await sendOtp(req.user)));
+app.post('/api/me/phone/verify', auth, (req, res) => {
+  verifyOtp(req.user, req.body.code);
   res.json(me(q.get('SELECT * FROM users WHERE id = ?', req.user.id)));
 });
 
@@ -175,7 +184,7 @@ app.post('/api/driver/apply', auth, upload, (req, res) => {
   const files = req.files || {};
   const discard = () => Object.values(files).flat().forEach((f) => fs.rm(f.path, () => {}));
   try {
-    if (!req.user.phone) fail(400, 'Complete your profile (phone number) before applying');
+    if (!phoneVerified(req.user)) fail(400, 'Verify your mobile number in your profile before applying');
     const existing = q.get('SELECT * FROM driver_profiles WHERE user_id = ?', req.user.id);
     if (existing && existing.status !== 'rejected') fail(409, 'You have already applied');
     const b = req.body;
@@ -315,7 +324,7 @@ function loadBooking(req) {
 }
 
 app.post('/api/bookings', auth, (req, res) => {
-  if (!req.user.phone) fail(400, 'Add your phone number in your profile before booking');
+  if (!phoneVerified(req.user)) fail(400, 'Verify your mobile number in your profile before booking');
   const driver = q.get('SELECT * FROM driver_profiles WHERE user_id = ?', Number(req.body.driver_id));
   if (!driver || driver.status !== 'approved' || driver.paused) fail(404, 'This driver is not taking bookings');
   if (driver.user_id === req.user.id) fail(400, 'You cannot book yourself');
