@@ -12,7 +12,6 @@ import DriverHub from './pages/DriverHub.jsx';
 import Admin from './pages/Admin.jsx';
 import Landing from './pages/Landing.jsx';
 
-/** Signed-in only (browsing). A verified phone number is not needed just to look around. */
 /** Top-bar menu item with a highlight that glides from one item to the next. */
 function NavItem({ to, end, children }) {
   return (
@@ -42,20 +41,22 @@ function TabItem({ to, end, icon, label }) {
   );
 }
 
-function SignedIn({ children }) {
+/** Signed-in only. No phone number is needed to look around: search, driver profiles, the bookings list, admin. */
+function SignedIn({ children, admin }) {
   const { user } = useAuth();
   const loc = useLocation();
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname + loc.search }} replace />;
+  if (admin && user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }
 
-/** Signed-in only. Booking, driving and admin also need a verified phone number. */
-function Private({ children, admin }) {
+/** Signed in AND a verified phone number. Only registering as a driver needs this page-level check;
+ *  sending a booking request is blocked on the driver's page and again by the server. */
+function Private({ children }) {
   const { user } = useAuth();
   const loc = useLocation();
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname + loc.search }} replace />;
-  if (!user.phone_verified && loc.pathname !== '/profile') return <Navigate to="/profile" state={{ from: loc.pathname + loc.search }} replace />;
-  if (admin && user.role !== 'admin') return <Navigate to="/" replace />;
+  if (!user.phone_verified) return <Navigate to="/profile" state={{ from: loc.pathname + loc.search }} replace />;
   return children;
 }
 
@@ -116,11 +117,11 @@ export default function App() {
           <Route path="/" element={user ? <Search /> : <Landing />} />
           <Route path="/drivers/:id" element={<SignedIn><DriverPage /></SignedIn>} />
           <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Private><Profile /></Private>} />
-          <Route path="/bookings" element={<Private><BookingList /></Private>} />
-          <Route path="/bookings/:id" element={<Private><BookingDetail /></Private>} />
+          <Route path="/profile" element={<SignedIn><Profile /></SignedIn>} />
+          <Route path="/bookings" element={<SignedIn><BookingList /></SignedIn>} />
+          <Route path="/bookings/:id" element={<SignedIn><BookingDetail /></SignedIn>} />
           <Route path="/driver" element={<Private><DriverHub /></Private>} />
-          <Route path="/admin" element={<Private admin><Admin /></Private>} />
+          <Route path="/admin" element={<SignedIn admin><Admin /></SignedIn>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
           </motion.div>
