@@ -2,6 +2,15 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.10.1 — 2026-11-17 — Browse without a verified number
+
+Owner's decision: a signed-in user may search and look around even without a verified phone number (or no number at all); only booking is blocked.
+
+- Search, driver profiles, the bookings list, the profile page and (for admins) the admin page no longer need a verified number. Registering as a driver still sends the person to the profile page first, since an application needs one.
+- Sending a booking request is still blocked: the driver page shows "Verify your phone number to request" and the server refuses it (400) until the number is verified.
+- Fixed on the way: the profile page itself must not require a verified number (it would have looped).
+- Tested in the browser with an account that has no phone number: it lands on search, search returns drivers with prices, a driver profile opens, "My bookings" opens, the booking API call is refused, and "Register as driver" goes to the profile. 148 automated checks pass (two new ones for this).
+
 ## 0.10.0 — 2026-11-17 — Premium minimal redesign with smooth motion
 
 Owner's request: rebuild the UI with premium minimalist components (from 21st.dev), adapt their source, and add satisfying transitions.
