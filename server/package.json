@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch --disable-warning=ExperimentalWarning src/index.js",
     "start": "node --disable-warning=ExperimentalWarning src/index.js",
-    "seed": "node --disable-warning=ExperimentalWarning src/seed.js"
+    "seed": "node --disable-warning=ExperimentalWarning src/seed.js",
+    "test": "node --disable-warning=ExperimentalWarning test/e2e.mjs"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
