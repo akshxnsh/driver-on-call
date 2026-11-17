@@ -38,6 +38,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | Availability for long bookings | The From time must be inside the driver's working hours that day, and no accepted booking may overlap. A same-day booking must also end inside working hours | Checking every individual day of a multi-day hire (for example a Sunday off in the middle) is left for later |
 | "Mark as paid" | Only the driver can mark a booking paid | The driver is the one who receives the money |
 | Completing a job | Driver can mark an accepted job completed at any time | Lets the flow be demonstrated without waiting for the real date. Tighten before launch |
+| Phone verification | One-time code by text before a number can be used to book or drive (owner decision, 2026-11-17). Sending is stubbed until an SMS provider is chosen | Real numbers stop fake accounts and let the driver and customer reach each other once a booking is accepted. Open: which provider (MSG91, Twilio, Firebase), and DLT template registration for India |
 | Notifications | In-app bell plus optional browser desktop alerts, polled every 10 seconds; chat messages collapse to one line per booking | Works with no third-party account. SMS / WhatsApp / email left as one hook because they need a paid provider |
 | Phone UI | One responsive web app with a phone layout and home-screen install (PWA), not a separate native app | One codebase serves web and phone now. A native Android / iOS app (or wrapping this one for the app stores) is a later step if store presence or push notifications are needed |
 | Demo data | 8 approved drivers near MG Road Bengaluru, 2 customers, 1 admin, 1 pending application | Enough to exercise every screen |
@@ -63,7 +64,8 @@ These are not solved by the prototype and need a decision before a real launch.
 5. **No-shows and cancellations.** Nothing stops either side cancelling late. Options: show cancellation counts on profiles, or suspend repeat offenders.
 6. **Safety features.** No SOS button, trip sharing or live tracking yet.
 7. **Reviews.** Consider BlaBlaCar-style "both submit before either is shown".
-8. **Notifications outside the app.** In-app notifications and desktop alerts exist (since 0.2.0), but they only reach someone who has DOC open in a browser tab. A driver with the app closed still hears nothing. Real use needs SMS or WhatsApp (for example MSG91 or Twilio in India), which needs a paid provider account and, for SMS, DLT template registration. The hook is `notify()` in `server/src/notify.js`.
+8. **Text messages.** Phone verification and out-of-app notifications both need an SMS provider; neither sends real texts yet.
+9. **Notifications outside the app.** In-app notifications and desktop alerts exist (since 0.2.0), but they only reach someone who has DOC open in a browser tab. A driver with the app closed still hears nothing. Real use needs SMS or WhatsApp (for example MSG91 or Twilio in India), which needs a paid provider account and, for SMS, DLT template registration. The hook is `notify()` in `server/src/notify.js`.
 9. **Time zone.** Working hours are evaluated in the server's time zone. Run the server in IST, or store a time zone per driver if the service expands.
 
 ## Not built yet

@@ -15,6 +15,7 @@ server/
     index.js            Express app: all routes, auth, uploads, error handling
     db.js               opens the database, creates tables, small query helper
     lib.js              business rules: availability check, distance, validation, public driver shape
+    otp.js              phone verification: code storage, limits, and sendSms() where an SMS provider plugs in
     notify.js           notifications table and notify(): the one place every event passes through
     demo.js             demo driver generator (seed and DEMO_MODE only)
     seed.js             first-run setup: creates .env and demo data
@@ -59,6 +60,7 @@ Auth is a JWT (30 days) returned at sign-in, stored in `localStorage`, sent as `
 | `bookings` | A hire request and its life | `customer_id`, `driver_id`, `start_at`, `end_at` (ms), pickup, `est_total`, `status`, `paid`; `plan` and `units` record which rate priced it (hours when hourly, otherwise days) |
 | `messages` | Chat per booking | `booking_id`, `sender_id`, `body` |
 | `reviews` | One per person per booking | `booking_id`, `author_id`, `subject_id`, `rating`, `comment` |
+| `otp_codes` | One pending phone-verification code per user | `user_id`, `phone`, `code_hash` (never the code), `expires_at`, `attempts`, send counters. `users.phone_verified_at` records verification |
 | `notifications` | In-app notifications | `user_id`, `kind` (booking/message/review/application), `title`, `body`, `link` (page to open), `read_at` |
 
 Booking status: `requested` → `accepted` → `completed`, or `requested` → `declined`, or `cancelled` from requested (customer) or accepted (either side).
@@ -88,6 +90,8 @@ All paths are under `/api`. "Auth" means a signed-in user.
 | POST `/bookings/:id/action` | Participants | `accept`, `decline`, `complete`, `paid` (driver); `cancel` (see status rules) |
 | GET, POST `/bookings/:id/messages` | Participants | Chat. GET takes `after` (last seen id) |
 | POST `/bookings/:id/review` | Participants | After completion, once per person |
+| POST `/me/phone/send-otp` | Auth | Sends a 6-digit code to the saved number (30 s between sends, 5 per hour). Demo mode returns `demo_code` instead of sending |
+| POST `/me/phone/verify` | Auth | Body `{ code }`. Marks the number verified |
 | GET `/notifications` | Auth | `{ unread, items }`: unread count and the 30 most recent |
 | POST `/notifications/read` | Auth | Body `{ id }`, `{ link }` (everything pointing at one page) or `{ all: true }` |
 | GET `/admin/drivers?status=` | Admin | Applications with full details |

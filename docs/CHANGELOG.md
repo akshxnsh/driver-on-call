@@ -2,6 +2,18 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.6.0 — 2026-11-17 — Mobile number verification (OTP)
+
+Owner's decision: a mobile number must be verified before it can be used.
+
+- Saving a number on the profile page now leads to a "Verify" card: send a 6-digit code, type it in, done. A number marked "Verified" stays verified; changing the number makes it unverified again.
+- Booking a driver and applying as a driver both require a verified number. The driver page's request button says "Verify your phone number to request" until then.
+- Rules: code valid 5 minutes, 30 seconds between sends, 5 sends per hour, 5 wrong tries before the code is discarded. Only a hash of the code is stored.
+- **Text messages are not sent yet.** `sendSms()` in `server/src/otp.js` is the single place to plug in an SMS provider. In demo mode it sends nothing and the page shows the code; with demo mode off it refuses with "Text messages are not set up on this server yet" rather than pretending. Real sending needs a provider account (for example MSG91 or Twilio) and, in India, a DLT-registered message template.
+- Seeded demo accounts count as verified.
+
+Tested in the browser with a throwaway account: the request button redirected to the profile, a wrong code was rejected, resend was blocked for 30 seconds, the right code verified and returned to the driver page, the same number stayed verified and a changed number became unverified. Code expiry and the 5-wrong-tries lockout were not run.
+
 ## 0.5.1 — 2026-11-17 — Exact duration
 
 Owner's decision: the time between From and To is counted exactly, with no rounding up.
