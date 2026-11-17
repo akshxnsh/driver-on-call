@@ -1,20 +1,18 @@
 # Render Blueprint: describes the whole deployment. See docs/DEPLOYMENT.md.
-# One Node web service serves both the API and the built web app, with a persistent disk for the
-# SQLite database and uploaded documents. A persistent disk needs a paid instance type.
+# One Node web service serves both the API and the built web app.
+# FREE VERSION: the free instance has no persistent disk, so the SQLite database and uploaded documents
+# are erased whenever the service restarts, redeploys or wakes from sleep. For lasting data switch to the
+# paid setup described in docs/DEPLOYMENT.md (plan: starter, a disk, DB_DIR and UPLOAD_DIR).
 services:
   - type: web
     name: doc-driver-on-call
     runtime: node
-    plan: starter
+    plan: free
     region: singapore
     buildCommand: npm install && npm install --prefix server && npm install --include=dev --prefix client && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
-    disk:
-      name: doc-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: 22.15.0
@@ -22,10 +20,6 @@ services:
         value: production
       - key: TZ
         value: Asia/Kolkata
-      - key: DB_DIR
-        value: /var/data/db
-      - key: UPLOAD_DIR
-        value: /var/data/uploads
       - key: DEMO_MODE
         value: "false"
       - key: JWT_SECRET
