@@ -1,0 +1,43 @@
+# Render Blueprint: describes the whole deployment. See docs/DEPLOYMENT.md.
+# One Node web service serves both the API and the built web app, with a persistent disk for the
+# SQLite database and uploaded documents. A persistent disk needs a paid instance type.
+services:
+  - type: web
+    name: doc-driver-on-call
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: npm install && npm install --prefix server && npm install --include=dev --prefix client && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: doc-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22.15.0
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: Asia/Kolkata
+      - key: DB_DIR
+        value: /var/data/db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: DEMO_MODE
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      # The values below are secret or personal, so they are typed into Render's dashboard, not this file.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_VERIFY_SERVICE_SID
+        sync: false
