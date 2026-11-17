@@ -29,6 +29,7 @@ Then open http://localhost:5173. The API runs on port 4000 and the web app proxi
 | `npm run setup` | Installs everything, creates `server/.env`, seeds demo data |
 | `npm run dev` | Starts API and web app with live reload |
 | `npm run dev:phone` | Same, and also reachable from phones on the same Wi-Fi |
+| `npm test` | Runs the end-to-end test suite on a throwaway database (about a minute) |
 | `npm run reset` | Deletes the database and uploads, then seeds fresh demo data (stop `dev` first) |
 | `npm run build` then `npm start` | Production mode: Express serves the built web app on one port |
 

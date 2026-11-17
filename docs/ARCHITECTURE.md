@@ -18,6 +18,7 @@ server/
     otp.js              phone verification: code storage, limits, and sendSms() where an SMS provider plugs in
     notify.js           notifications table and notify(): the one place every event passes through
     demo.js             demo driver generator (seed and DEMO_MODE only)
+    ../test/e2e.mjs     end-to-end test suite (npm test)
     seed.js             first-run setup: creates .env and demo data
 client/
   vite.config.js        dev server on 5173, proxies /api to 4000

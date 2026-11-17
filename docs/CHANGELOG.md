@@ -2,6 +2,13 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.7.0 — 2026-11-17 — Automated end-to-end test
+
+- `npm test` runs 144 checks against a throwaway server and database (it never touches your data and never sends a real text): sign-in protection, search and pricing, phone verification and its limits, booking and double-booking, contact privacy, chat, notifications, completion, payment, reviews and ratings, cancellation, driver applications with uploads, admin approve and reject, private documents, the driver dashboard, and odd or hostile input. All pass.
+- Also walked through live in the browser as the owner's verified account and a demo driver: search, request, chat, accept, phone reveal, paid, completed, reviews both ways, notifications on both sides, and the driver's public rating updating.
+- Added `GET /api/health` for hosting platforms. `DB_DIR` and `UPLOAD_DIR` settings let the data and uploads live on any folder (the tests use this, and a host's persistent disk can too).
+- Not covered by automatic tests: how the screens look, the Google pop-up sign-in, real SMS delivery (tried once by hand), code expiry after 5 minutes.
+
 ## 0.6.1 — 2026-11-17 — Twilio Verify for real texts
 
 - `server/src/otp.js` can send and check codes through Twilio Verify. It switches on when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID` are set in `server/.env`; otherwise demo mode (code shown on screen) applies as before. Twilio creates and checks the code, so none is stored here. Our own limits (30 s between sends, 5 an hour, 5 wrong tries) still apply on top of Twilio's.
