@@ -2,6 +2,15 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.8.2 — 2026-11-17 — Live on Render, tested end to end
+
+Live at https://doc-driver-on-call-8sl8.onrender.com (free instance, data resets on restart). Tested on the live site with real Google sign-in and real Twilio texts:
+
+- Three accounts signed in with Google (two admins from `ADMIN_EMAILS`, one ordinary user). Demo logins are hidden.
+- Two accounts verified the same number with real texts; one applied as a driver, an admin approved it, and the other account searched, requested, chatted, was accepted, marked paid, completed, and both sides left reviews. Notifications and the phone-number reveal worked on both sides.
+- Access control checked live: an ordinary user gets 403 from every admin endpoint, 401 when signed out, no Admin link, and `/admin` redirects home.
+- Needed in Render: `TWILIO_AUTH_TOKEN` (set by the owner in the dashboard) and the live address in the Google client's origins and redirects.
+
 ## 0.8.1 — 2026-11-17 — Free Render instance
 
 The owner has no payment card on Render, so the blueprint now uses the free instance with no disk. Data is erased on every restart or wake from sleep. The paid setup is documented in DEPLOYMENT.md for when a card is added.
