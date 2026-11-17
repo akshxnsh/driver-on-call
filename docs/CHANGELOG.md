@@ -2,6 +2,16 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.9.0 — 2026-11-17 — Landing page; the app opens only after sign-in
+
+Owner's decision: a new visitor sees only a landing page anyone can understand, and must sign in or sign up to enter the main app.
+
+- New landing page (`client/src/pages/Landing.jsx`) for signed-out visitors at `/`: what DOC does in one sentence, how it works in three steps, what it is good for, why drivers are trustworthy, and a "Are you a driver?" band. Buttons: "Get started" and "I am a driver" (both go to Google sign-in; the driver button then opens the driver page). Signed-out visitors see no menu, search or tab bar.
+- Every other page redirects to sign-in. After signing in the visitor returns to where they were headed; signed-in users see the search page at `/` as before. A verified phone number is still required only for booking, driving and admin, not for browsing.
+- The server now also requires sign-in for `GET /api/drivers/search` and `GET /api/drivers/:id`, so driver data cannot be read without an account. Profile photos stay reachable by their random file name so images load.
+- Tests: 146 checks pass (two new ones confirm signed-out search and profiles are refused).
+- Checked in the browser at phone size: landing page, redirects for signed-out `/drivers/4` and `/bookings`, "I am a driver" ending on the driver page, "Get started" ending on the search page.
+
 ## 0.8.3 — 2026-11-17 — Short address
 
 - The app now lives at **https://driveroncall.onrender.com**. Render fixes a service's web address when it is created and the Blueprint feature adds a random ending to every name, so the service was created directly (not from the Blueprint) with the name `driveroncall`. Its settings are in Render's dashboard; `render.yaml` is kept as the reference for them. The older long-address service and its paused Blueprint remain until deleted in the dashboard.

@@ -22,6 +22,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | Availability | Driver sets weekly working days and hours; accepted bookings block those slots |
 | Listing | A driver is visible only after an admin approves their documents |
 | Extras in v1 | Map view, in-app chat, ratings and reviews, ad placeholders |
+| First impression | A visitor who is not signed in sees only a plain-language landing page; the real app (search, drivers, bookings) opens only after signing in (decided 2026-11-17) | Driver data is not shown to anonymous visitors, and the pitch is clear before asking for a sign-in |
 | Display name | The interface shows **DOC** (decided 2026-11-16) |
 | Source control | Commit to git as work progresses; private GitHub repository |
 | Interface style | Minimal and easy to scan: few small grey descriptions, generous spacing (decided 2026-11-17). New screens should add helper text only where it prevents a mistake |

@@ -32,7 +32,8 @@ client/
     Notifications.jsx   bell, notification panel, desktop alerts (polls every 10 s)
     styles.css          all styling
     pages/
-      Search.jsx        home: search form, results list, map
+      Landing.jsx       what signed-out visitors see at /
+      Search.jsx        home for signed-in users: search form, results list, map
       DriverPage.jsx    public driver profile and booking request form
       Bookings.jsx      booking list, booking detail, chat, review
       Account.jsx       sign-in (Google + demo) and profile
@@ -80,8 +81,8 @@ All paths are under `/api`. "Auth" means a signed-in user.
 | POST `/auth/google` | Public | Body `credential` (Google ID token) and optional `nonce` (sent by the full-page route, must match the token). Verifies, creates or loads the user, returns JWT |
 | GET `/auth/demo-users`, POST `/auth/demo` | Demo mode only | List and sign in as seeded demo accounts |
 | GET `/me`, PUT `/me` | Auth | Read and update own profile (name, phone, city) |
-| GET `/drivers/search` | Public | Query: `lat`, `lng`, `radius`, `start`, `end` (ISO date-times), `sort`. Returns nearby listed drivers with distance, availability and the price for that span |
-| GET `/drivers/:id` | Public | Public profile, working hours, reviews. Never includes phone or documents |
+| GET `/drivers/search` | Auth | Query: `lat`, `lng`, `radius`, `start`, `end` (ISO date-times), `sort`. Returns nearby listed drivers with distance, availability and the price for that span |
+| GET `/drivers/:id` | Auth | Public profile, working hours, reviews. Never includes phone or documents |
 | GET `/driver/me` | Auth | Own driver application or listing |
 | POST `/driver/apply` | Auth | Multipart: fields plus `photo`, `dl_file`, `id_file`. Creates a pending application; allowed again after rejection |
 | PUT `/driver/me` | Approved driver | Edit rates, bio, location, working hours, pause |
