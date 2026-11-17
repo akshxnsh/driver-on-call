@@ -116,28 +116,33 @@ export function Profile() {
   const [form, setForm] = useState({ name: user.name || '', phone: (user.phone || '').replace('+91', ''), city: user.city || '' });
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
-  const firstTime = !user.phone;
+  const verified = user.phone_verified;
 
+  // Saving a profile with a new or unverified number leads straight to the code step.
   async function submit(e) {
     e.preventDefault();
     setError(''); setSaved(false);
     try {
-      setUser(await api('/me', { method: 'PUT', body: form }));
-      if (firstTime && from) navigate(from, { replace: true });
-      else setSaved(true);
+      const next = await api('/me', { method: 'PUT', body: form });
+      setUser(next);
+      if (next.phone_verified) setSaved(true);
     } catch (err) {
       setError(err.message);
     }
+  }
+  function done(next) {
+    setUser(next);
+    if (from) navigate(from, { replace: true });
   }
   const field = (k) => ({ value: form[k], onChange: (e) => setForm({ ...form, [k]: e.target.value }) });
 
   return (
     <div className="narrow">
       <form className="card" onSubmit={submit}>
-        <h1>{firstTime ? 'Complete your profile' : 'Your profile'}</h1>
+        <h1>{user.phone ? 'Your profile' : 'Complete your profile'}</h1>
         <label className="field">Full name <input {...field('name')} required autoComplete="name" /></label>
         <label className="field">Email <input value={user.email} disabled /></label>
-        <label className="field">Mobile number
+        <label className="field">Mobile number {verified && <span className="chip chip-accepted">Verified</span>}
           <div className="prefix"><span>+91</span><input {...field('phone')} required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} placeholder="10-digit number" autoComplete="tel-national" /></div>
           <span className="hint">Shared only after a booking is accepted.</span>
         </label>
@@ -146,8 +151,71 @@ export function Profile() {
         {saved && <p className="alert alert-ok">Profile saved.</p>}
         <button className="btn btn-primary">Save</button>
       </form>
+      {user.phone && !verified && <VerifyPhone phone={user.phone} onVerified={done} />}
       {/* Always shown, including before the profile is complete, so nobody is stuck signed in. */}
       <button className="btn btn-ghost btn-block" onClick={logout}>Sign out</button>
     </div>
+  );
+}
+
+/** Asks for a code, sends it, and checks what the person types. */
+function VerifyPhone({ phone, onVerified }) {
+  const [code, setCode] = useState('');
+  const [sent, setSent] = useState(false);
+  const [demoCode, setDemoCode] = useState('');
+  const [wait, setWait] = useState(0);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = setTimeout(() => setWait(wait - 1), 1000);
+    return () => clearTimeout(t);
+  }, [wait]);
+
+  async function send() {
+    setBusy(true); setError('');
+    try {
+      const r = await api('/me/phone/send-otp', { method: 'POST' });
+      setSent(true); setWait(r.resend_in); setDemoCode(r.demo_code || ''); setCode('');
+    } catch (err) {
+      setError(err.message);
+    }
+    setBusy(false);
+  }
+  async function verify(e) {
+    e.preventDefault();
+    setBusy(true); setError('');
+    try {
+      onVerified(await api('/me/phone/verify', { method: 'POST', body: { code } }));
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="card" onSubmit={verify}>
+      <h2>Verify {phone}</h2>
+      {!sent ? (
+        <>
+          <p>We will text a 6-digit code to this number.</p>
+          <ErrorBox>{error}</ErrorBox>
+          <button type="button" className="btn btn-primary" onClick={send} disabled={busy}>{busy ? 'Sending…' : 'Send code'}</button>
+        </>
+      ) : (
+        <>
+          {demoCode && <p className="alert alert-ok">Demo mode: no text was sent. Your code is <b>{demoCode}</b>.</p>}
+          <label className="field">6-digit code
+            <input value={code} onChange={(e) => setCode(e.target.value.replace(/D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="••••••" required autoFocus />
+          </label>
+          <ErrorBox>{error}</ErrorBox>
+          <div className="actions">
+            <button className="btn btn-primary" disabled={busy || code.length !== 6}>Verify</button>
+            <button type="button" className="btn btn-ghost" onClick={send} disabled={busy || wait > 0}>{wait > 0 ? `Resend in ${wait}s` : 'Resend code'}</button>
+          </div>
+        </>
+      )}
+    </form>
   );
 }

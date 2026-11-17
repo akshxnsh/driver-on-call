@@ -14,7 +14,7 @@ function Private({ children, admin }) {
   const { user } = useAuth();
   const loc = useLocation();
   if (!user) return <Navigate to="/login" state={{ from: loc.pathname + loc.search }} replace />;
-  if (!user.phone && loc.pathname !== '/profile') return <Navigate to="/profile" state={{ from: loc.pathname + loc.search }} replace />;
+  if (!user.phone_verified && loc.pathname !== '/profile') return <Navigate to="/profile" state={{ from: loc.pathname + loc.search }} replace />;
   if (admin && user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }

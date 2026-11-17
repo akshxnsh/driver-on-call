@@ -136,8 +136,8 @@ export default function DriverPage() {
             <ErrorBox>{error}</ErrorBox>
             {!user ? (
               <Link className="btn btn-primary btn-block" to="/login" state={{ from: here.pathname + here.search }}>Sign in to request</Link>
-            ) : !user.phone ? (
-              <Link className="btn btn-primary btn-block" to="/profile" state={{ from: here.pathname + here.search }}>Add your phone number to request</Link>
+            ) : !user.phone_verified ? (
+              <Link className="btn btn-primary btn-block" to="/profile" state={{ from: here.pathname + here.search }}>Verify your phone number to request</Link>
             ) : isSelf ? (
               <p className="muted">This is your own listing.</p>
             ) : (
