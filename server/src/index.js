@@ -252,7 +252,8 @@ function parseSpan(input) {
   return { start, end };
 }
 
-app.get('/api/drivers/search', (req, res) => {
+// Searching and viewing drivers needs a signed-in account (the web app shows only a landing page before that).
+app.get('/api/drivers/search', auth, (req, res) => {
   const lat = Number(req.query.lat), lng = Number(req.query.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) fail(400, 'Set a location first');
   const radius = Math.min(Math.max(Number(req.query.radius) || 10, 1), 100);
@@ -279,7 +280,7 @@ app.get('/api/drivers/search', (req, res) => {
   res.json({ drivers, available_count: drivers.filter((d) => d.available).length, start, end });
 });
 
-app.get('/api/drivers/:id', (req, res) => {
+app.get('/api/drivers/:id', auth, (req, res) => {
   const row = driverRow(Number(req.params.id));
   if (!row || row.status !== 'approved') fail(404, 'Driver not found');
   const reviews = q.all(

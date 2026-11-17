@@ -68,6 +68,8 @@ try {
 
   section('1. Public pages and basic protection');
   check('config is public', (await call(null, 'GET', '/config')).s === 200);
+  check('driver search needs sign-in', (await call(null, 'GET', `/drivers/search?lat=12.9&lng=77.6&start=${at(3, 10)}&end=${at(3, 12)}`)).s === 401);
+  check('driver profile needs sign-in', (await call(null, 'GET', '/drivers/4')).s === 401);
   for (const [m, u] of [['GET', '/me'], ['GET', '/bookings'], ['GET', '/notifications'], ['GET', '/driver/me'], ['GET', '/admin/drivers'], ['POST', '/bookings']]) {
     check(`${m} ${u} needs sign-in`, (await call(null, m, u, m === 'POST' ? {} : undefined)).s === 401);
   }
@@ -77,9 +79,9 @@ try {
   check('google login refused when not configured', (await call(null, 'POST', '/auth/google', { credential: 'x' })).s === 400);
 
   section('2. Search');
-  const q = (s, e, extra = '') => call(null, 'GET', `/drivers/search?lat=12.9756&lng=77.605&start=${encodeURIComponent(s)}&end=${encodeURIComponent(e)}${extra}`);
-  check('search needs a location', (await call(null, 'GET', `/drivers/search?start=${at(day, 10)}&end=${at(day, 12)}`)).s === 400);
-  check('search needs both From and To', (await call(null, 'GET', `/drivers/search?lat=12.9&lng=77.6&start=${at(day, 10)}`)).s === 400);
+  const q = (s, e, extra = '') => call(priya, 'GET', `/drivers/search?lat=12.9756&lng=77.605&start=${encodeURIComponent(s)}&end=${encodeURIComponent(e)}${extra}`);
+  check('search needs a location', (await call(priya, 'GET', `/drivers/search?start=${at(day, 10)}&end=${at(day, 12)}`)).s === 400);
+  check('search needs both From and To', (await call(priya, 'GET', `/drivers/search?lat=12.9&lng=77.6&start=${at(day, 10)}`)).s === 400);
   check('To before From rejected', (await q(at(day, 12), at(day, 10))).s === 400);
   check('span over 12 weeks rejected', (await q(at(day, 10), at(day + 90, 10))).s === 400);
   const base = await q(at(day, 10), at(day, 14, 30));
@@ -98,9 +100,9 @@ check('a 1 km radius returns only the closest drivers (minimum radius is 1 km)',
   check('9 days is 1 week + 2 days (9400)', (await price(at(day, 9), at(day + 9, 9))) === 9400);
   check('ends after working hours is flagged', (await q(at(day, 20), at(day, 23, 30))).j.drivers.find((d) => d.id === R).unavailable_reason === 'Ends after working hours');
   check('starts before working hours is flagged', (await q(at(day, 4), at(day, 7))).j.drivers.find((d) => d.id === R).unavailable_reason === 'Outside working hours');
-  const profile = await call(null, 'GET', `/drivers/${R}`);
+  const profile = await call(priya, 'GET', `/drivers/${R}`);
   check('public profile has reviews and hours but no phone', profile.s === 200 && Array.isArray(profile.j.reviews) && profile.j.availability.length === 7 && !('phone' in profile.j));
-  check('pending driver profile is hidden', (await call(null, 'GET', `/drivers/${V}`)).s === 404);
+  check('pending driver profile is hidden', (await call(priya, 'GET', `/drivers/${V}`)).s === 404);
 
   section('3. Phone verification gates booking');
   const fresh = mkUser('fresh@example.test');
@@ -189,7 +191,7 @@ check('a 1 km radius returns only the closest drivers (minimum radius is 1 km)',
   check('second review by the same person refused', (await call(priya, 'POST', `/bookings/${b1.id}/review`, { rating: 1 })).s === 409);
   check('driver reviews the customer', (await call(ramesh, 'POST', `/bookings/${b1.id}/review`, { rating: 5 })).s === 201);
   check('stranger cannot review', (await call(arjun, 'POST', `/bookings/${b1.id}/review`, { rating: 1 })).s === 404);
-  const after = await call(null, 'GET', `/drivers/${R}`);
+  const after = await call(priya, 'GET', `/drivers/${R}`);
   check('driver rating and review count updated (1 seeded 5-star + this 4-star = 4.5 from 2)', after.j.rating_count === 2 && after.j.rating_avg === 4.5 && after.j.reviews[0].rating === 4, JSON.stringify([after.j.rating_avg, after.j.rating_count]));
   check('each side sees the other review on the booking', (await call(priya, 'GET', `/bookings/${b1.id}`)).j.their_review?.rating === 5);
 
@@ -272,7 +274,7 @@ check('a 1 km radius returns only the closest drivers (minimum radius is 1 km)',
   check('paused driver disappears from search', !(await q(nextMonday.toISOString(), new Date(nextMonday.getTime() + 3600e3).toISOString())).j.drivers.some((d) => d.id === cand.id));
   check('and cannot be booked', (await book(priya, cand.id, nextMonday.toISOString(), new Date(nextMonday.getTime() + 3600e3).toISOString())).s === 404);
   check('admin removes a driver from listing', (await call(admin, 'POST', `/admin/drivers/${cand.id}/review`, { decision: 'reject', reason: 'Test removal' })).s === 200);
-  check('removed driver is gone from public view', (await call(null, 'GET', `/drivers/${cand.id}`)).s === 404);
+  check('removed driver is gone from public view', (await call(priya, 'GET', `/drivers/${cand.id}`)).s === 404);
 
   section('10. Robustness');
   const weird = (await call(priya, 'POST', `/bookings/${b1.id}/messages`, { body: '<script>alert(1)</script> \' OR 1=1 --' }));
