@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth.jsx';
 import { Avatar } from './components.jsx';
@@ -8,8 +9,17 @@ import { BookingList, BookingDetail } from './pages/Bookings.jsx';
 import { Login, Profile } from './pages/Account.jsx';
 import DriverHub from './pages/DriverHub.jsx';
 import Admin from './pages/Admin.jsx';
+import Landing from './pages/Landing.jsx';
 
-/** Signed-in only. New accounts are sent to complete their profile first. */
+/** Signed-in only (browsing). A verified phone number is not needed just to look around. */
+function SignedIn({ children }) {
+  const { user } = useAuth();
+  const loc = useLocation();
+  if (!user) return <Navigate to="/login" state={{ from: loc.pathname + loc.search }} replace />;
+  return children;
+}
+
+/** Signed-in only. Booking, driving and admin also need a verified phone number. */
 function Private({ children, admin }) {
   const { user } = useAuth();
   const loc = useLocation();
@@ -32,6 +42,8 @@ const TabIcon = ({ name }) => (
 
 export default function App() {
   const { user, ready, logout } = useAuth();
+  // The phone tab bar only exists once signed in; without it the page needs no bottom padding.
+  useEffect(() => { document.body.classList.toggle('no-tabbar', !user); }, [user]);
   if (!ready) return <p className="loading">Loading…</p>;
   const driverLabel = user?.driver_status === 'approved' ? 'Driver dashboard' : user?.driver_status ? 'Driver application' : 'Register as driver';
 
@@ -40,12 +52,14 @@ export default function App() {
       <header className="topbar">
         <div className="wrap topbar-in">
           <Link to="/" className="brand"><span className="brand-mark" aria-hidden="true">◎</span> DOC</Link>
-          <nav>
-            <NavLink to="/" end>Find a driver</NavLink>
-            {user && <NavLink to="/bookings">My bookings</NavLink>}
-            <NavLink to="/driver">{driverLabel}</NavLink>
-            {user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
-          </nav>
+          {user && (
+            <nav>
+              <NavLink to="/" end>Find a driver</NavLink>
+              <NavLink to="/bookings">My bookings</NavLink>
+              <NavLink to="/driver">{driverLabel}</NavLink>
+              {user.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+            </nav>
+          )}
           <div className="topbar-user">
             {user ? (
               <>
@@ -60,8 +74,8 @@ export default function App() {
 
       <main className="wrap">
         <Routes>
-          <Route path="/" element={<Search />} />
-          <Route path="/drivers/:id" element={<DriverPage />} />
+          <Route path="/" element={user ? <Search /> : <Landing />} />
+          <Route path="/drivers/:id" element={<SignedIn><DriverPage /></SignedIn>} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Private><Profile /></Private>} />
           <Route path="/bookings" element={<Private><BookingList /></Private>} />
@@ -77,13 +91,15 @@ export default function App() {
       </footer>
 
       {/* Phone navigation: a tab bar fixed to the bottom of the screen (hidden on wider screens). */}
-      <nav className="tabbar" aria-label="Main">
-        <NavLink to="/" end><TabIcon name="search" /><span>Find</span></NavLink>
-        <NavLink to="/bookings"><TabIcon name="calendar" /><span>Bookings</span></NavLink>
-        <NavLink to="/driver"><TabIcon name="wheel" /><span>{user?.driver_status === 'approved' ? 'Driving' : 'Drive'}</span></NavLink>
-        {user?.role === 'admin' && <NavLink to="/admin"><TabIcon name="shield" /><span>Admin</span></NavLink>}
-        <NavLink to={user ? '/profile' : '/login'}><TabIcon name="person" /><span>{user ? 'Account' : 'Sign in'}</span></NavLink>
-      </nav>
+      {user && (
+        <nav className="tabbar" aria-label="Main">
+          <NavLink to="/" end><TabIcon name="search" /><span>Find</span></NavLink>
+          <NavLink to="/bookings"><TabIcon name="calendar" /><span>Bookings</span></NavLink>
+          <NavLink to="/driver"><TabIcon name="wheel" /><span>{user.driver_status === 'approved' ? 'Driving' : 'Drive'}</span></NavLink>
+          {user.role === 'admin' && <NavLink to="/admin"><TabIcon name="shield" /><span>Admin</span></NavLink>}
+          <NavLink to="/profile"><TabIcon name="person" /><span>Account</span></NavLink>
+        </nav>
+      )}
     </>
   );
 }
