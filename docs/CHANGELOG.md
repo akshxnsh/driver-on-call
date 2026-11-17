@@ -2,6 +2,18 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.10.0 — 2026-11-17 — Premium minimal redesign with smooth motion
+
+Owner's request: rebuild the UI with premium minimalist components (from 21st.dev), adapt their source, and add satisfying transitions.
+
+- **21st.dev could not be used directly.** Its component source and its shadcn install command both require an account (`shadcn view https://21st.dev/r/...` answers "Authentication required"), the owner could not sign in, and the free plan allows two components a day anyway. Instead the same ecosystem was used through open registries that install without an account: **shadcn/ui** and **Magic UI** (both open source; Magic UI authors also publish on 21st.dev). Believed MIT licensed; confirm on their sites before a commercial launch.
+- **Foundation:** Tailwind CSS v4, the Motion animation library, shadcn-style helpers (`client/src/lib/utils.js`, `components.json`, the `@` import alias). The older hand-written styles stay in a lower CSS layer, so utilities always win and nothing broke.
+- **Components added** to `client/src/components/ui/`: button, card, input, label, textarea, badge, tabs, avatar, separator, skeleton (shadcn/ui) and blur-fade, grid-pattern, animated-shiny-text, border-beam, number-ticker (Magic UI). Adapted: import paths fixed, links in buttons no longer underlined, theme colours mapped to the app's palette.
+- **Landing page rebuilt:** quiet grid backdrop, shimmering "checked before listed" label, large headline, a product preview card with a soft moving border and a counting price, step and reason cards that lift on hover, a green driver band.
+- **Motion:** page transitions between screens (fade and slide), a menu highlight and phone tab-bar indicator that glide between items, staggered entrance of the search heading, form and driver list, hover lift on cards, button press feedback, focus rings. Respects the system "reduce motion" setting.
+- **Look:** frosted header, softer off-white background, rounder corners, pill buttons, calmer borders and shadows across all existing screens.
+- Tests: 146 pass. Checked in the browser at phone and desktop width: landing page, sign-in, search page, menu transitions. Booking, driver, admin and profile screens received the global look (colours, corners, buttons, motion on navigation) but were not rebuilt on the new components.
+
 ## 0.9.0 — 2026-11-17 — Landing page; the app opens only after sign-in
 
 Owner's decision: a new visitor sees only a landing page anyone can understand, and must sign in or sign up to enter the main app.

@@ -25,6 +25,7 @@ A marketplace where a car owner hires an independent driver for their own car. T
 | First impression | A visitor who is not signed in sees only a plain-language landing page; the real app (search, drivers, bookings) opens only after signing in (decided 2026-11-17) | Driver data is not shown to anonymous visitors, and the pitch is clear before asking for a sign-in |
 | Display name | The interface shows **DOC** (decided 2026-11-16) |
 | Source control | Commit to git as work progresses; private GitHub repository |
+| Visual direction | Premium minimal: off-white canvas, one deep-green accent, generous space, large confident type, soft motion (decided 2026-11-17). Built from shadcn/ui and Magic UI parts because 21st.dev requires an account to copy its source | Keeps the quiet look the owner asked for earlier while feeling more finished |
 | Interface style | Minimal and easy to scan: few small grey descriptions, generous spacing (decided 2026-11-17). New screens should add helper text only where it prevents a mistake |
 
 ## Decisions made during the build (owner said "use your judgment")

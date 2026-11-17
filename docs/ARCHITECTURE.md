@@ -42,6 +42,15 @@ client/
 docs/                   this folder
 ```
 
+## UI stack
+
+React 18 + Vite, with Tailwind CSS v4 and the Motion library beside the original hand-written stylesheet (`client/src/styles.css`).
+
+- `client/src/tailwind.css` sets the CSS layers (`theme, base, legacy, components, utilities`). The old stylesheet is imported into the `legacy` layer, below the utilities, and Tailwind's own reset is not loaded. New code should use utility classes and the shared parts; old screens keep their old classes until they are migrated.
+- `client/src/components/ui/` holds shadcn/ui and Magic UI components (source copied into the project, so they can be edited). Add more with `npx shadcn@latest add <name>` or `npx shadcn@latest add https://magicui.design/r/<name>`, then check the import in the new file reads `@/lib/utils`.
+- Page transitions and the gliding highlights live in `client/src/App.jsx`. Entrance animations use `BlurFade`.
+- 21st.dev components need a 21st.dev account to copy; none are used.
+
 ## Screen sizes
 
 All layout is in `styles.css`. Above 860 px: two-column pages and the menu in the top bar. Below 860 px: single column. Below 720 px (phones): the top menu is replaced by the bottom tab bar (`.tabbar` in `App.jsx`), search shows list or map (`.view-switch` in `Search.jsx`), and the driver page shows a sticky request bar (`.book-cta` in `DriverPage.jsx`). These three elements exist in the page at every size and are hidden by CSS on wider screens.
