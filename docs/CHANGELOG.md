@@ -2,6 +2,10 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.8.1 — 2026-11-17 — Free Render instance
+
+The owner has no payment card on Render, so the blueprint now uses the free instance with no disk. Data is erased on every restart or wake from sleep. The paid setup is documented in DEPLOYMENT.md for when a card is added.
+
 ## 0.8.0 — 2026-11-17 — Ready for Render
 
 - Added `render.yaml` (Render Blueprint), `engines` (Node 22.5+) and `docs/DEPLOYMENT.md`.

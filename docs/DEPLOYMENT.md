@@ -1,5 +1,7 @@
 # Deployment (Render)
 
+> **Current setup (2026-11-17): the FREE instance.** It has no persistent disk, so all data (users, bookings, uploaded documents) is erased whenever the service restarts, redeploys or wakes from sleep, and the first visit after a sleep is slow. It is good for a look-around, not for real users. To keep data, switch `render.yaml` to the paid setup below: `plan: starter`, add the disk, and set `DB_DIR=/var/data/db` and `UPLOAD_DIR=/var/data/uploads`. Everything below describes that paid setup.
+
 Last updated: 2026-11-17
 
 The whole app (API and web pages) runs as one Node web service on [Render](https://render.com). `render.yaml` in the project root describes it, so Render can create everything from the GitHub repository.
