@@ -63,6 +63,9 @@ function me(user) {
   };
 }
 
+// For the hosting platform's health check: answers 200 only when the database responds.
+app.get('/api/health', (_req, res) => res.json({ ok: q.get('SELECT 1 AS ok').ok === 1 }));
+
 app.get('/api/config', (_req, res) => {
   res.json({ googleClientId: GOOGLE_CLIENT_ID || null, demoMode: DEMO_MODE });
 });

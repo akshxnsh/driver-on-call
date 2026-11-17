@@ -4,8 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = path.join(here, '..', 'data');
-export const UPLOAD_DIR = path.join(here, '..', 'uploads');
+// DB_DIR and UPLOAD_DIR can be overridden (the automated tests use a throwaway folder).
+export const DATA_DIR = process.env.DB_DIR || path.join(here, '..', 'data');
+export const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(here, '..', 'uploads');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
