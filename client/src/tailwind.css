@@ -1,0 +1,47 @@
+/*
+ * Tailwind runs beside the older hand-written styles. No Tailwind "preflight" reset is loaded, so
+ * existing pages are untouched, and the older styles sit in a layer BELOW the utilities so a
+ * utility class always wins. New components use only utilities and the tokens below.
+ */
+@layer theme, base, legacy, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import './styles.css' layer(legacy);
+/*
+ ---break---
+ */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--card);
+  --color-muted: var(--bg);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--line);
+  --color-primary: var(--brand);
+  --color-primary-foreground: #ffffff;
+  --color-accent: var(--brand-soft);
+  --color-accent-foreground: var(--brand-dark);
+  --color-destructive: var(--danger);
+  --color-ring: var(--brand);
+  --color-input: var(--line);
+  --color-secondary: var(--bg);
+  --color-secondary-foreground: var(--ink);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--ink);
+  --color-card-foreground: var(--ink);
+  --radius-lg: var(--radius);
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --animate-shiny-text: shiny-text 8s infinite;
+  @keyframes shiny-text {
+  0%, 90%, 100% {
+    background-position: calc(-100% - var(--shiny-width)) 0;
+    }
+  30%, 60% {
+    background-position: calc(100% + var(--shiny-width)) 0;
+    }
+  }
+}
