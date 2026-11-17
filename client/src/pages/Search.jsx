@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, defaultEnd, defaultStart, durationLabel, fmtRange, inr, plural } from '../api.js';
 import { useAuth } from '../auth.jsx';
+import { BlurFade } from '@/components/ui/blur-fade';
 import { AdSlot, Avatar, ErrorBox, LocationPicker, MapView, Rating, SpanFields, Verified } from '../components.jsx';
 
 const SAVED = 'doc_search'; // remembers the form fields across reloads (not the results)
@@ -85,8 +86,11 @@ export default function Search() {
   return (
     <>
       <section className="hero">
-        <h1>Your car. A trusted driver.</h1>
-        <p>Hire a verified driver by the hour, day or week.</p>
+        <BlurFade delay={0.04}>
+          <h1>Your car. A trusted driver.</h1>
+          <p>Hire a verified driver by the hour, day or week.</p>
+        </BlurFade>
+        <BlurFade delay={0.12}>
         <form className="search card" onSubmit={(e) => { e.preventDefault(); run(form); }}>
           <div className="field">Pickup location
             <LocationPicker value={form.location} onChange={(location) => set({ location })} />
@@ -97,6 +101,7 @@ export default function Search() {
           </div>
           <ErrorBox>{error}</ErrorBox>
         </form>
+        </BlurFade>
       </section>
 
       {result && searched ? (
@@ -133,7 +138,9 @@ export default function Search() {
               <ul className="driver-list">
                 {result.drivers.map((d, i) => (
                   <li key={d.id}>
-                    <DriverCard d={d} to={`/drivers/${d.id}?${searchQuery(searched)}`} />
+                    <BlurFade delay={Math.min(i, 8) * 0.05} duration={0.35}>
+                      <DriverCard d={d} to={`/drivers/${d.id}?${searchQuery(searched)}`} />
+                    </BlurFade>
                     {i === 3 && <AdSlot size="inline" />}
                   </li>
                 ))}

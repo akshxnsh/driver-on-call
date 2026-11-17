@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth.jsx';
 import { Avatar } from './components.jsx';
@@ -12,6 +13,35 @@ import Admin from './pages/Admin.jsx';
 import Landing from './pages/Landing.jsx';
 
 /** Signed-in only (browsing). A verified phone number is not needed just to look around. */
+/** Top-bar menu item with a highlight that glides from one item to the next. */
+function NavItem({ to, end, children }) {
+  return (
+    <NavLink to={to} end={end} className="navitem">
+      {({ isActive }) => (
+        <>
+          {isActive && <motion.span layoutId="nav-pill" className="navitem-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+          <span className="navitem-label">{children}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+/** Phone tab-bar item with a small bar that slides along the top edge. */
+function TabItem({ to, end, icon, label }) {
+  return (
+    <NavLink to={to} end={end}>
+      {({ isActive }) => (
+        <>
+          {isActive && <motion.span layoutId="tab-bar" className="tab-indicator" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />}
+          <TabIcon name={icon} />
+          <span>{label}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 function SignedIn({ children }) {
   const { user } = useAuth();
   const loc = useLocation();
@@ -42,22 +72,23 @@ const TabIcon = ({ name }) => (
 
 export default function App() {
   const { user, ready, logout } = useAuth();
+  const location = useLocation();
   // The phone tab bar only exists once signed in; without it the page needs no bottom padding.
   useEffect(() => { document.body.classList.toggle('no-tabbar', !user); }, [user]);
   if (!ready) return <p className="loading">Loading…</p>;
   const driverLabel = user?.driver_status === 'approved' ? 'Driver dashboard' : user?.driver_status ? 'Driver application' : 'Register as driver';
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <header className="topbar">
         <div className="wrap topbar-in">
           <Link to="/" className="brand"><span className="brand-mark" aria-hidden="true">◎</span> DOC</Link>
           {user && (
             <nav>
-              <NavLink to="/" end>Find a driver</NavLink>
-              <NavLink to="/bookings">My bookings</NavLink>
-              <NavLink to="/driver">{driverLabel}</NavLink>
-              {user.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+              <NavItem to="/" end>Find a driver</NavItem>
+              <NavItem to="/bookings">My bookings</NavItem>
+              <NavItem to="/driver">{driverLabel}</NavItem>
+              {user.role === 'admin' && <NavItem to="/admin">Admin</NavItem>}
             </nav>
           )}
           <div className="topbar-user">
@@ -73,7 +104,15 @@ export default function App() {
       </header>
 
       <main className="wrap">
-        <Routes>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          >
+        <Routes location={location}>
           <Route path="/" element={user ? <Search /> : <Landing />} />
           <Route path="/drivers/:id" element={<SignedIn><DriverPage /></SignedIn>} />
           <Route path="/login" element={<Login />} />
@@ -84,6 +123,8 @@ export default function App() {
           <Route path="/admin" element={<Private admin><Admin /></Private>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <footer className="footer">
@@ -93,13 +134,13 @@ export default function App() {
       {/* Phone navigation: a tab bar fixed to the bottom of the screen (hidden on wider screens). */}
       {user && (
         <nav className="tabbar" aria-label="Main">
-          <NavLink to="/" end><TabIcon name="search" /><span>Find</span></NavLink>
-          <NavLink to="/bookings"><TabIcon name="calendar" /><span>Bookings</span></NavLink>
-          <NavLink to="/driver"><TabIcon name="wheel" /><span>{user.driver_status === 'approved' ? 'Driving' : 'Drive'}</span></NavLink>
-          {user.role === 'admin' && <NavLink to="/admin"><TabIcon name="shield" /><span>Admin</span></NavLink>}
-          <NavLink to="/profile"><TabIcon name="person" /><span>Account</span></NavLink>
+          <TabItem to="/" end icon="search" label="Find" />
+          <TabItem to="/bookings" icon="calendar" label="Bookings" />
+          <TabItem to="/driver" icon="wheel" label={user.driver_status === 'approved' ? 'Driving' : 'Drive'} />
+          {user.role === 'admin' && <TabItem to="/admin" icon="shield" label="Admin" />}
+          <TabItem to="/profile" icon="person" label="Account" />
         </nav>
       )}
-    </>
+    </MotionConfig>
   );
 }
