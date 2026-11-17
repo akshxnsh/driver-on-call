@@ -133,8 +133,8 @@ app.put('/api/me', auth, (req, res) => {
   res.json(me(q.get('SELECT * FROM users WHERE id = ?', req.user.id)));
 });
 app.post('/api/me/phone/send-otp', auth, async (req, res) => res.json(await sendOtp(req.user)));
-app.post('/api/me/phone/verify', auth, (req, res) => {
-  verifyOtp(req.user, req.body.code);
+app.post('/api/me/phone/verify', auth, async (req, res) => {
+  await verifyOtp(req.user, req.body.code);
   res.json(me(q.get('SELECT * FROM users WHERE id = ?', req.user.id)));
 });
 
