@@ -2,6 +2,11 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.8.3 — 2026-11-17 — Short address
+
+- The app now lives at **https://driveroncall.onrender.com**. Render fixes a service's web address when it is created and the Blueprint feature adds a random ending to every name, so the service was created directly (not from the Blueprint) with the name `driveroncall`. Its settings are in Render's dashboard; `render.yaml` is kept as the reference for them. The older long-address service and its paused Blueprint remain until deleted in the dashboard.
+- Google client now allows the new address (origin and `/login` redirect). Google can take several minutes to apply that: until then sign-in shows `Error 400: redirect_uri_mismatch`.
+
 ## 0.8.2 — 2026-11-17 — Live on Render, tested end to end
 
 Live at https://doc-driver-on-call-8sl8.onrender.com (free instance, data resets on restart). Tested on the live site with real Google sign-in and real Twilio texts:

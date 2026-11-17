@@ -2,6 +2,8 @@
 
 > **Live address:** https://driveroncall.onrender.com (service name `driveroncall`; Render fixes a service's web address when it is created, so the earlier long address `doc-driver-on-call-8sl8.onrender.com` was replaced by a new service).
 >
+> **How it was created:** directly in Render (not from this Blueprint), because Blueprints append a random ending to names. Environment values live in the service's Environment page; `render.yaml` documents what they should be. Changing the web address later means creating a new service and adding the new address to the Google client (origin and `/login` redirect).
+>
 > **Current setup (2026-11-17): the FREE instance.** It has no persistent disk, so all data (users, bookings, uploaded documents) is erased whenever the service restarts, redeploys or wakes from sleep, and the first visit after a sleep is slow. It is good for a look-around, not for real users. To keep data, switch `render.yaml` to the paid setup below: `plan: starter`, add the disk, and set `DB_DIR=/var/data/db` and `UPLOAD_DIR=/var/data/uploads`. Everything below describes that paid setup.
 
 Last updated: 2026-11-17
