@@ -65,7 +65,7 @@ Booking status: `requested` → `accepted` → `completed`, or `requested` → `
 
 A driver is "listed" when `status = 'approved'` and `paused = 0`. A driver is "available" for a span when the start falls in their working hours for that weekday (a same-day booking must also end within them) and no `accepted` booking overlaps. See `availabilityIssue` in `server/src/lib.js`.
 
-The price of a span comes from `quote()` in the same file; `quoteTotal()` in `client/src/api.js` repeats the rule for the live total in the request form. Change both together.
+The price of a span comes from `quote()` in the same file and covers exactly the time between start and end (whole weeks, whole days, leftover hours pro rata; see PRODUCT.md). `quoteTotal()` in `client/src/api.js` repeats the rule for the live total in the request form. Change both together.
 
 ## API
 
