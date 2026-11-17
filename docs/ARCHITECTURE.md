@@ -118,4 +118,5 @@ Errors are JSON `{ "error": "message" }` with a matching HTTP status.
 | OpenStreetMap tiles | Map background | Public tile server is for light use only |
 | Nominatim | Place search and reverse geocoding, called from the browser | The search text or coordinates are sent to OpenStreetMap. Rate-limited; replace or self-host before launch |
 | Google Identity Services | Sign-in | Only loaded when `GOOGLE_CLIENT_ID` is set |
+| Twilio Verify | Sends and checks phone verification codes (optional) | Called from the server only when the three TWILIO_ variables are set. The user's phone number is sent to Twilio |
 | Google Fonts | Plus Jakarta Sans typeface | Falls back to system fonts offline |

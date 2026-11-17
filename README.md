@@ -72,6 +72,18 @@ To set it up again elsewhere (for example a deployed site): add the site's `http
 
 Before going live set `DEMO_MODE=false`; this removes the demo login and the demo-driver button.
 
+## Real text messages for phone verification (Twilio, free trial)
+
+By default (demo mode) no text is sent and the Verify card shows the code on screen. To send real texts:
+
+1. Create a free account at twilio.com. It asks you to verify your own phone number.
+2. In the Twilio Console, create a **Verify service** (Verify → Services). Copy its Service SID, which starts with `VA`.
+3. From the Console home page copy your Account SID (starts with `AC`) and Auth Token.
+4. Put the three values in `server/.env` as `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID`, then restart `npm run dev`. Never commit or share the Auth Token.
+5. While on the trial, Twilio only texts numbers listed under Phone Numbers → Verified Caller IDs (up to 5). Add the numbers you want to test with. You may also need to allow India under Verify → Settings / Messaging → Geo permissions.
+
+When the three values are set, Twilio is used even if `DEMO_MODE=true`. To go public, upgrade the Twilio account (the five-number limit goes away), or swap the two functions in `server/src/otp.js` for another provider.
+
 ## Documentation
 
 - [docs/PRODUCT.md](docs/PRODUCT.md): what the product does, every decision taken and why, where it differs from BlaBlaCar, open risks.
