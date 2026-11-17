@@ -2,6 +2,12 @@
 
 Newest first. Add an entry whenever behaviour, data model or a product decision changes, and update PRODUCT.md or ARCHITECTURE.md in the same change.
 
+## 0.8.0 — 2026-11-17 — Ready for Render
+
+- Added `render.yaml` (Render Blueprint), `engines` (Node 22.5+) and `docs/DEPLOYMENT.md`.
+- Checked locally in production mode on an empty database, the way Render will run it: one port serves the app and API, deep links fall back to the app, health check answers, demo login and demo seeding are gone, and the data lands in the configured folder.
+- Not yet deployed. Needs the owner to sign in to Render and confirm the paid instance.
+
 ## 0.7.0 — 2026-11-17 — Automated end-to-end test
 
 - `npm test` runs 144 checks against a throwaway server and database (it never touches your data and never sends a real text): sign-in protection, search and pricing, phone verification and its limits, booking and double-booking, contact privacy, chat, notifications, completion, payment, reviews and ratings, cancellation, driver applications with uploads, admin approve and reject, private documents, the driver dashboard, and odd or hostile input. All pass.

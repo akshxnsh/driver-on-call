@@ -89,4 +89,5 @@ When the three values are set, Twilio is used even if `DEMO_MODE=true`. To go pu
 
 - [docs/PRODUCT.md](docs/PRODUCT.md): what the product does, every decision taken and why, where it differs from BlaBlaCar, open risks.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code layout, data model, API reference, security notes.
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): putting it on the internet (Render), settings and limits.
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): what changed and when.
